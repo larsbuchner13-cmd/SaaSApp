@@ -1,7 +1,3 @@
-import { config } from "dotenv";
-
-config({ path: ".env.local" });
-
 import { eq } from "drizzle-orm";
 
 import {
@@ -85,9 +81,7 @@ async function main() {
   console.log("Seed abgeschlossen.");
 }
 
-main()
-  .catch((error) => {
-    console.error("Seed fehlgeschlagen:", error);
-    process.exit(1);
-  })
-  .finally(() => process.exit(0));
+main().catch((error) => {
+  console.error("Seed fehlgeschlagen:", error);
+  process.exit(1);
+});

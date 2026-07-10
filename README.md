@@ -38,6 +38,19 @@ Neon Postgres + Drizzle ORM, Zugriff über den `neon-http`-Treiber (HTTPS-basier
 passend für Vercel Serverless Functions — kein klassischer TCP-Pool). Schema in
 `db/schema/`, eine Datei pro Domäne (siehe ARCHITECTURE.md, Abschnitt 4).
 
+## Deployment (Vercel)
+
+Migrationen und Seed laufen automatisch bei jedem Deploy über das
+`vercel-build`-Script (von Vercel als Next.js-Konvention automatisch anstelle
+von `build` erkannt): `db:migrate` → `db:seed` → `next build`. Beides ist
+idempotent und kann gefahrlos bei jedem Deploy erneut laufen.
+
+Dafür einmalig in den Vercel-Projekteinstellungen (Settings → Environment
+Variables) setzen, für Production und Preview:
+
+- `DATABASE_URL` — die Neon-Connection-URL
+- `NEXT_PUBLIC_APP_URL` — die tatsächliche Deployment-URL
+
 ## Status
 
 Meilenstein 2 (Datenbankfundament) — siehe ARCHITECTURE.md, Abschnitt "Priorisierte Roadmap".
