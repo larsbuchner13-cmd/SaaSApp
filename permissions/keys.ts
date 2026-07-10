@@ -1,0 +1,41 @@
+export const permissionKeyValues = [
+  "offers:create",
+  "offers:read",
+  "offers:update",
+  "offers:delete",
+  "offers:send",
+  "customers:create",
+  "customers:read",
+  "customers:update",
+  "customers:delete",
+  "materials:manage",
+  "pricing:manage",
+  "billing:read",
+  "billing:manage",
+  "settings:manage",
+  "users:invite",
+  "users:manage",
+  "audit:read",
+] as const;
+
+export type PermissionKey = (typeof permissionKeyValues)[number];
+
+export const permissionDescriptions: Record<PermissionKey, string> = {
+  "offers:create": "Angebote erstellen",
+  "offers:read": "Angebote ansehen",
+  "offers:update": "Angebote bearbeiten",
+  "offers:delete": "Angebote löschen",
+  "offers:send": "Angebote versenden",
+  "customers:create": "Kunden anlegen",
+  "customers:read": "Kunden ansehen",
+  "customers:update": "Kunden bearbeiten",
+  "customers:delete": "Kunden löschen",
+  "materials:manage": "Materialkatalog verwalten",
+  "pricing:manage": "Preisregeln verwalten",
+  "billing:read": "Abrechnung ansehen",
+  "billing:manage": "Abrechnung verwalten",
+  "settings:manage": "Firmeneinstellungen verwalten",
+  "users:invite": "Mitarbeiter einladen",
+  "users:manage": "Mitarbeiter und Rollen verwalten",
+  "audit:read": "Audit-Log einsehen",
+};

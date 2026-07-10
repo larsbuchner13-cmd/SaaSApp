@@ -4,7 +4,7 @@ import { z } from "zod";
  * Env-Validation, serverseitig geprueft beim Boot (import in `app/layout.tsx`).
  * Wird schrittweise um Felder ergaenzt, sobald die jeweilige Integration
  * implementiert wird (siehe ARCHITECTURE.md, Abschnitt "Priorisierte Roadmap"):
- *   - M2: DATABASE_URL, CLERK_SECRET_KEY, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ *   - M2: DATABASE_URL (Neon), CLERK_SECRET_KEY, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
  *   - M5: OPENAI_API_KEY
  *   - M6: BLOB_READ_WRITE_TOKEN, RESEND_API_KEY
  *   - M7: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
@@ -16,6 +16,13 @@ const serverEnvSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
+  DATABASE_URL: z
+    .string()
+    .url()
+    .startsWith(
+      "postgresql://",
+      "DATABASE_URL muss eine Postgres-Connection-URL sein",
+    ),
 });
 
 const clientEnvSchema = z.object({
