@@ -10,7 +10,7 @@ Erstes Modul: KI-gestützte Angebotserstellung. Die Architektur muss so geschnit
 dass CRM, Rechnungen, Baustellenmanagement, Terminplanung, KI-Telefonie usw. **ohne
 Neuentwicklung des Kerns** ergänzt werden können.
 
-Leitprinzip für jede Funktion: *Spart sie einem Handwerker mind. 15 Minuten pro Tag?*
+Leitprinzip für jede Funktion: _Spart sie einem Handwerker mind. 15 Minuten pro Tag?_
 Wenn nein → nicht bauen.
 
 ---
@@ -127,17 +127,17 @@ config/                       # Env-Validation (Zod), Feature-Flags, Plan-Limits
 
 ### Bounded Contexts
 
-| Context | Verantwortung | Kern-Aggregat |
-|---|---|---|
-| **Identity & Tenancy** | Companies, Users, Memberships, Rollen | `Company`, `Membership` |
-| **CRM (Customers)** | Kundenstammdaten, Ansprechpartner, Historie | `Customer` |
-| **Offers** | Angebotserstellung, Positionen, Status-Workflow | `Offer` (Aggregate Root), `OfferItem` |
-| **Pricing Engine** | Materialpreise, Arbeitszeiten, Regeln, Steuer/Rabatt-Logik | `PricingRule`, `Material` |
-| **AI Assistant** | Leistungsbeschreibung aus Text/Sprachnotiz generieren | (zustandslos, nutzt `Offer`) |
-| **Billing & Subscriptions** | Pläne, Limits, Stripe-Sync, Grace Period | `Subscription` |
-| **Usage & Audit** | Nutzungszähler, Audit-Trail | `UsageMetric`, `AuditLog` |
-| **Files** | Uploads (Fotos, PDF, Sprachnotizen) | `Attachment` |
-| **Notifications** | E-Mail/In-App-Benachrichtigungen | `Notification` |
+| Context                     | Verantwortung                                              | Kern-Aggregat                         |
+| --------------------------- | ---------------------------------------------------------- | ------------------------------------- |
+| **Identity & Tenancy**      | Companies, Users, Memberships, Rollen                      | `Company`, `Membership`               |
+| **CRM (Customers)**         | Kundenstammdaten, Ansprechpartner, Historie                | `Customer`                            |
+| **Offers**                  | Angebotserstellung, Positionen, Status-Workflow            | `Offer` (Aggregate Root), `OfferItem` |
+| **Pricing Engine**          | Materialpreise, Arbeitszeiten, Regeln, Steuer/Rabatt-Logik | `PricingRule`, `Material`             |
+| **AI Assistant**            | Leistungsbeschreibung aus Text/Sprachnotiz generieren      | (zustandslos, nutzt `Offer`)          |
+| **Billing & Subscriptions** | Pläne, Limits, Stripe-Sync, Grace Period                   | `Subscription`                        |
+| **Usage & Audit**           | Nutzungszähler, Audit-Trail                                | `UsageMetric`, `AuditLog`             |
+| **Files**                   | Uploads (Fotos, PDF, Sprachnotizen)                        | `Attachment`                          |
+| **Notifications**           | E-Mail/In-App-Benachrichtigungen                           | `Notification`                        |
 
 Diese Contexts sind lose gekoppelt über Service-Interfaces (kein gegenseitiger DB-Zugriff
 über Repository-Grenzen hinweg). Ein zukünftiges "Baustellenmanagement"-Modul referenziert
@@ -188,30 +188,30 @@ erDiagram
 
 ### Tabellenübersicht
 
-| Tabelle | Zweck | Wichtige Felder |
-|---|---|---|
-| `companies` | Mandant (Tenant Root) | name, slug, address, logo_url, vat_id |
-| `users` | Clerk-gespiegelte Benutzer | clerk_user_id, email, name |
-| `memberships` | User ↔ Company ↔ Role | user_id, company_id, role_id, status |
-| `roles` | Owner/Admin/Büro/Mitarbeiter/Steuerberater | key, label, is_system |
-| `permissions` | Granulare Rechte | key (`offers:create`, `billing:manage`, …) |
-| `role_permissions` | Join-Tabelle | role_id, permission_id |
-| `customers` | Kundenstammdaten | name, contact_person, phone, email, address, notes |
-| `offers` | Angebot (Aggregate Root) | customer_id, status, offer_number, total_net, total_gross, valid_until |
-| `offer_items` | Positionen | offer_id, description, quantity, unit, unit_price, material_id, source (`ai`/`manual`) |
-| `pricing_rules` | Rabatte, Zuschläge, Anfahrt, Entsorgung, Gemeinkosten, Gewinnaufschlag | type, value, conditions (jsonb) |
-| `materials` | Materialkatalog + Preise | name, sku, unit, unit_price, supplier_ref |
-| `attachments` | Datei-Metadaten (Blob-Referenz) | owner_type, owner_id, blob_url, mime_type, size |
-| `voice_notes` | Sprachnotizen-Metadaten | offer_id, blob_url, transcript, duration_s |
-| `activity_logs` | leichte Aktivitäts-Timeline (UI) | entity_type, entity_id, actor_id, action |
-| `audit_logs` | rechtssichere Audit-Trail | actor_id, action, entity_type, entity_id, metadata (jsonb), ip |
-| `subscriptions` | Stripe-Sync | stripe_customer_id, stripe_subscription_id, plan, status, current_period_end |
-| `usage_metrics` | Zähler pro Zeitraum | metric_key (`offers_created`, `ai_requests`, …), period, value |
-| `feature_flags` | Plan-/Company-Overrides | key, enabled, scope (`plan`/`company`) |
-| `settings` | Firmeneinstellungen | key, value (jsonb) — z.B. Briefkopf, MwSt-Satz |
-| `api_keys` | zukünftige Partner-API | hashed_key, scopes, last_used_at |
-| `webhooks` | ausgehende Webhooks (später) | url, secret, events |
-| `notifications` | In-App/E-Mail-Benachrichtigungen | user_id, type, payload, read_at |
+| Tabelle            | Zweck                                                                  | Wichtige Felder                                                                        |
+| ------------------ | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `companies`        | Mandant (Tenant Root)                                                  | name, slug, address, logo_url, vat_id                                                  |
+| `users`            | Clerk-gespiegelte Benutzer                                             | clerk_user_id, email, name                                                             |
+| `memberships`      | User ↔ Company ↔ Role                                                  | user_id, company_id, role_id, status                                                   |
+| `roles`            | Owner/Admin/Büro/Mitarbeiter/Steuerberater                             | key, label, is_system                                                                  |
+| `permissions`      | Granulare Rechte                                                       | key (`offers:create`, `billing:manage`, …)                                             |
+| `role_permissions` | Join-Tabelle                                                           | role_id, permission_id                                                                 |
+| `customers`        | Kundenstammdaten                                                       | name, contact_person, phone, email, address, notes                                     |
+| `offers`           | Angebot (Aggregate Root)                                               | customer_id, status, offer_number, total_net, total_gross, valid_until                 |
+| `offer_items`      | Positionen                                                             | offer_id, description, quantity, unit, unit_price, material_id, source (`ai`/`manual`) |
+| `pricing_rules`    | Rabatte, Zuschläge, Anfahrt, Entsorgung, Gemeinkosten, Gewinnaufschlag | type, value, conditions (jsonb)                                                        |
+| `materials`        | Materialkatalog + Preise                                               | name, sku, unit, unit_price, supplier_ref                                              |
+| `attachments`      | Datei-Metadaten (Blob-Referenz)                                        | owner_type, owner_id, blob_url, mime_type, size                                        |
+| `voice_notes`      | Sprachnotizen-Metadaten                                                | offer_id, blob_url, transcript, duration_s                                             |
+| `activity_logs`    | leichte Aktivitäts-Timeline (UI)                                       | entity_type, entity_id, actor_id, action                                               |
+| `audit_logs`       | rechtssichere Audit-Trail                                              | actor_id, action, entity_type, entity_id, metadata (jsonb), ip                         |
+| `subscriptions`    | Stripe-Sync                                                            | stripe_customer_id, stripe_subscription_id, plan, status, current_period_end           |
+| `usage_metrics`    | Zähler pro Zeitraum                                                    | metric_key (`offers_created`, `ai_requests`, …), period, value                         |
+| `feature_flags`    | Plan-/Company-Overrides                                                | key, enabled, scope (`plan`/`company`)                                                 |
+| `settings`         | Firmeneinstellungen                                                    | key, value (jsonb) — z.B. Briefkopf, MwSt-Satz                                         |
+| `api_keys`         | zukünftige Partner-API                                                 | hashed_key, scopes, last_used_at                                                       |
+| `webhooks`         | ausgehende Webhooks (später)                                           | url, secret, events                                                                    |
+| `notifications`    | In-App/E-Mail-Benachrichtigungen                                       | user_id, type, payload, read_at                                                        |
 
 Alle FKs `ON DELETE RESTRICT` außer klar kaskadierender Kind-Entitäten (`offer_items` →
 `offers` CASCADE). Composite-Index `(tenant_id, created_at)` auf allen häufig gelisteten
@@ -259,19 +259,19 @@ Up-/Downgrade). Webhook-Handler sind idempotent (Event-ID-Dedupe) mit Retry-Tole
 
 ## 9. Priorisierte Roadmap
 
-| Meilenstein | Inhalt | Ergebnis |
-|---|---|---|
-| **M0** ✅ | Architekturübersicht, Domänenanalyse, Datenmodell, Roadmap | dieses Dokument |
-| **M1** | Projekt-Scaffold: Next.js 15 + TS + Tailwind + shadcn/ui, Ordnerstruktur, Env-Validation, Lint/Format, CI-Grundgerüst | lauffähiges leeres Projekt, deploybar auf Vercel |
-| **M2** | Datenbank & Auth-Fundament: Neon + Drizzle Schema (alle Tabellen aus Abschn. 4), Migrations, Clerk-Integration inkl. Org-Mapping, Tenant-Context, RBAC-Grundgerüst | Login, Company-Onboarding, leeres Dashboard |
-| **M3** | Kundenverwaltung (CRM-Basis) | Kunde anlegen/suchen/bearbeiten, mobile-first |
-| **M4** | Preisengine + Materialien/Preislisten (ohne KI) | Angebot manuell erstellbar mit korrekter Preisberechnung |
-| **M5** | KI-Assistent für Leistungsbeschreibung (Text + Sprachnotiz) | Angebotsposition aus Diktat, versioniertes Prompt-System |
-| **M6** | PDF-Erzeugung & Versand | professionelles Angebots-PDF, Download/E-Mail |
-| **M7** | Subscription & Billing (Stripe) inkl. Plan-Limits, Feature-Flags | zahlende Kunden möglich |
-| **M8** | Audit-Log, Usage-Tracking, Dashboard-Kennzahlen | Owner sieht Aktivität & Verbrauch |
-| **M9** | Security-Härtung, Rate-Limiting, Monitoring (Sentry), E2E-Tests kritischer Flows | Production-Ready-Review |
-| **M10+** | Zukünftige Module (Rechnungen, Baustellen, Kalender, KI-Telefonie, Integrationen) | je eigener Feature-Slice, entkoppelt über Adapter |
+| Meilenstein | Inhalt                                                                                                                                                             | Ergebnis                                                 |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| **M0** ✅   | Architekturübersicht, Domänenanalyse, Datenmodell, Roadmap                                                                                                         | dieses Dokument                                          |
+| **M1**      | Projekt-Scaffold: Next.js 15 + TS + Tailwind + shadcn/ui, Ordnerstruktur, Env-Validation, Lint/Format, CI-Grundgerüst                                              | lauffähiges leeres Projekt, deploybar auf Vercel         |
+| **M2**      | Datenbank & Auth-Fundament: Neon + Drizzle Schema (alle Tabellen aus Abschn. 4), Migrations, Clerk-Integration inkl. Org-Mapping, Tenant-Context, RBAC-Grundgerüst | Login, Company-Onboarding, leeres Dashboard              |
+| **M3**      | Kundenverwaltung (CRM-Basis)                                                                                                                                       | Kunde anlegen/suchen/bearbeiten, mobile-first            |
+| **M4**      | Preisengine + Materialien/Preislisten (ohne KI)                                                                                                                    | Angebot manuell erstellbar mit korrekter Preisberechnung |
+| **M5**      | KI-Assistent für Leistungsbeschreibung (Text + Sprachnotiz)                                                                                                        | Angebotsposition aus Diktat, versioniertes Prompt-System |
+| **M6**      | PDF-Erzeugung & Versand                                                                                                                                            | professionelles Angebots-PDF, Download/E-Mail            |
+| **M7**      | Subscription & Billing (Stripe) inkl. Plan-Limits, Feature-Flags                                                                                                   | zahlende Kunden möglich                                  |
+| **M8**      | Audit-Log, Usage-Tracking, Dashboard-Kennzahlen                                                                                                                    | Owner sieht Aktivität & Verbrauch                        |
+| **M9**      | Security-Härtung, Rate-Limiting, Monitoring (Sentry), E2E-Tests kritischer Flows                                                                                   | Production-Ready-Review                                  |
+| **M10+**    | Zukünftige Module (Rechnungen, Baustellen, Kalender, KI-Telefonie, Integrationen)                                                                                  | je eigener Feature-Slice, entkoppelt über Adapter        |
 
 Jeder Meilenstein wird lauffähig, getestet und deploybar übergeben. Nach jedem Meilenstein
 erfolgt eine Freigabe, bevor der nächste startet.
