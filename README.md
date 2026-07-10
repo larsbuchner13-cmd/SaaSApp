@@ -53,5 +53,9 @@ Variables) setzen, für Production und Preview:
 
 ## Status
 
-Meilenstein 2 (Datenbankfundament) — siehe ARCHITECTURE.md, Abschnitt "Priorisierte Roadmap".
-Clerk-Integration/Tenant-Context folgt, sobald Clerk-API-Keys vorliegen.
+Meilenstein 3 (Kundenverwaltung) — siehe ARCHITECTURE.md, Abschnitt "Priorisierte Roadmap".
+
+`server/tenant-context.ts` nutzt aktuell einen Platzhalter-Tenant (ein
+Demo-Betrieb) statt eines echten Logins — Clerk-Integration folgt, sobald
+Clerk-API-Keys vorliegen. Das ist der einzige Ort, der dafür ausgetauscht
+wird; alle Features rufen nur `getTenantContext()` auf.

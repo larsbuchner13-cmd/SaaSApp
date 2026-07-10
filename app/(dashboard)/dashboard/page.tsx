@@ -5,15 +5,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { listCustomers } from "@/repositories/customers";
+import { getTenantContext } from "@/server/tenant-context";
 
-const stats: Array<{ label: string; value: string; hint: string }> = [
-  { label: "Heute", value: "0", hint: "Angebote erstellt" },
-  { label: "Neue Angebote", value: "0", hint: "diese Woche" },
-  { label: "Offene Angebote", value: "0", hint: "warten auf Antwort" },
-  { label: "Kunden", value: "0", hint: "insgesamt" },
-];
+export const dynamic = "force-dynamic";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const { companyId } = await getTenantContext();
+  const customers = await listCustomers(companyId);
+
+  const stats: Array<{ label: string; value: string; hint: string }> = [
+    { label: "Heute", value: "0", hint: "Angebote erstellt" },
+    { label: "Neue Angebote", value: "0", hint: "diese Woche" },
+    { label: "Offene Angebote", value: "0", hint: "warten auf Antwort" },
+    { label: "Kunden", value: String(customers.length), hint: "insgesamt" },
+  ];
+
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8">
       <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
