@@ -99,17 +99,19 @@ export function OfferForm({
   }
 
   return (
-    <form
-      className="flex flex-col gap-6"
-      onSubmit={(event) => {
-        event.preventDefault();
-        formAction({ customerId, validUntil, items });
-      }}
-    >
+    <form action={formAction} className="flex flex-col gap-6">
+      <input
+        type="hidden"
+        name="items"
+        value={JSON.stringify(items)}
+        readOnly
+      />
+
       <div className="flex flex-col gap-2">
         <Label htmlFor="customerId">Kunde *</Label>
         <select
           id="customerId"
+          name="customerId"
           value={customerId}
           onChange={(event) => setCustomerId(event.target.value)}
           required
@@ -130,6 +132,7 @@ export function OfferForm({
         <Label htmlFor="validUntil">Gültig bis</Label>
         <Input
           id="validUntil"
+          name="validUntil"
           type="date"
           value={validUntil}
           onChange={(event) => setValidUntil(event.target.value)}

@@ -18,7 +18,7 @@ import {
 import { calculateOfferTotals } from "@/services/pricing/calculate-offer-totals";
 import { getTenantContext } from "@/server/tenant-context";
 
-import { offerFormSchema, type OfferFormInput } from "./schemas";
+import { offerFormSchema } from "./schemas";
 
 const DEFAULT_VAT_RATE = 19;
 const GENERIC_ERROR =
@@ -26,11 +26,31 @@ const GENERIC_ERROR =
 
 export type OfferActionState = { error?: string } | undefined;
 
+function fieldOf(formData: FormData, key: string): string {
+  const value = formData.get(key);
+  return typeof value === "string" ? value : "";
+}
+
+function parseItemsField(formData: FormData): unknown[] {
+  const raw = fieldOf(formData, "items");
+  if (!raw) return [];
+  try {
+    const value = JSON.parse(raw);
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+
 export async function createOfferAction(
   _prevState: OfferActionState,
-  payload: OfferFormInput,
+  formData: FormData,
 ): Promise<OfferActionState> {
-  const parsed = offerFormSchema.safeParse(payload);
+  const parsed = offerFormSchema.safeParse({
+    customerId: fieldOf(formData, "customerId"),
+    validUntil: fieldOf(formData, "validUntil"),
+    items: parseItemsField(formData),
+  });
 
   if (!parsed.success) {
     return {
@@ -94,9 +114,13 @@ export async function createOfferAction(
 export async function updateOfferAction(
   offerId: string,
   _prevState: OfferActionState,
-  payload: OfferFormInput,
+  formData: FormData,
 ): Promise<OfferActionState> {
-  const parsed = offerFormSchema.safeParse(payload);
+  const parsed = offerFormSchema.safeParse({
+    customerId: fieldOf(formData, "customerId"),
+    validUntil: fieldOf(formData, "validUntil"),
+    items: parseItemsField(formData),
+  });
 
   if (!parsed.success) {
     return {
