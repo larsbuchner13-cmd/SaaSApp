@@ -1,4 +1,4 @@
-import { ChevronRight, History, Percent } from "lucide-react";
+import { ChevronRight, CreditCard, History, Percent } from "lucide-react";
 import Link from "next/link";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +9,12 @@ const settingsLinks = [
     label: "Preisregeln",
     description: "Rabatte, Zuschläge, Anfahrt, Entsorgung, Gewinnaufschlag",
     icon: Percent,
+  },
+  {
+    href: "/settings/billing",
+    label: "Abrechnung",
+    description: "Tarif, Nutzung und Zahlungsdaten verwalten",
+    icon: CreditCard,
   },
   {
     href: "/settings/audit",

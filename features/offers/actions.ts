@@ -24,6 +24,10 @@ import {
 } from "@/repositories/offers";
 import { listActivePricingRules } from "@/repositories/pricing-rules";
 import { incrementUsageMetric } from "@/repositories/usage-metrics";
+import {
+  UsageLimitExceededError,
+  checkUsageLimit,
+} from "@/services/billing/check-usage-limit";
 import { calculateOfferTotals } from "@/services/pricing/calculate-offer-totals";
 import { getTenantContext } from "@/server/tenant-context";
 
@@ -73,6 +77,7 @@ export async function createOfferAction(
   try {
     const { companyId, userId } = await getTenantContext();
     await requirePermission({ companyId, userId, permission: "offers:create" });
+    await checkUsageLimit(companyId, "offers_created");
 
     const rules = await listActivePricingRules(companyId);
     const totals = calculateOfferTotals(
@@ -121,6 +126,9 @@ export async function createOfferAction(
   } catch (error) {
     if (error instanceof PermissionDeniedError) {
       return { error: "Du hast keine Berechtigung, Angebote zu erstellen." };
+    }
+    if (error instanceof UsageLimitExceededError) {
+      return { error: error.message };
     }
     console.error("createOfferAction failed:", error);
     return { error: GENERIC_ERROR };
@@ -254,6 +262,7 @@ export async function generateOfferItemsAction(
   try {
     const { companyId, userId } = await getTenantContext();
     await requirePermission({ companyId, userId, permission: "offers:create" });
+    await checkUsageLimit(companyId, "ai_requests");
 
     const items = await generateOfferItems(trimmed);
 
@@ -272,6 +281,9 @@ export async function generateOfferItemsAction(
       return {
         error: "Du hast keine Berechtigung, den KI-Assistenten zu nutzen.",
       };
+    }
+    if (error instanceof UsageLimitExceededError) {
+      return { error: error.message };
     }
     console.error("generateOfferItemsAction failed:", error);
     return { error: AI_GENERIC_ERROR };

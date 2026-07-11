@@ -5,7 +5,6 @@ import { z } from "zod";
  * Wird schrittweise um Felder ergaenzt, sobald die jeweilige Integration
  * implementiert wird (siehe ARCHITECTURE.md, Abschnitt "Priorisierte Roadmap"):
  *   - M2: DATABASE_URL (Neon), CLERK_SECRET_KEY, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
- *   - M7: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
  *   - M9: SENTRY_DSN
  * Neue Vars gehoeren zwingend hierher, nie als roher `process.env`-Zugriff
  * an anderer Stelle im Code.
@@ -26,6 +25,21 @@ const serverEnvSchema = z.object({
     .string()
     .min(1, "BLOB_READ_WRITE_TOKEN darf nicht leer sein"),
   RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY darf nicht leer sein"),
+  STRIPE_SECRET_KEY: z
+    .string()
+    .min(1, "STRIPE_SECRET_KEY darf nicht leer sein"),
+  /**
+   * Erst verfuegbar, sobald der Webhook-Endpunkt in Stripe angelegt ist
+   * (braucht eine echte Deployment-URL) bzw. sobald `stripe:setup-plans`
+   * einmal gelaufen ist. Bis dahin optional — die jeweiligen Features
+   * pruefen selbst und liefern eine verstaendliche Fehlermeldung statt
+   * die ganze App am Boot zu hindern.
+   */
+  STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
+  STRIPE_PRICE_STARTER: z.string().min(1).optional(),
+  STRIPE_PRICE_PRO: z.string().min(1).optional(),
+  STRIPE_PRICE_BUSINESS: z.string().min(1).optional(),
+  STRIPE_PRICE_ENTERPRISE: z.string().min(1).optional(),
 });
 
 const clientEnvSchema = z.object({

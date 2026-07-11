@@ -5,6 +5,7 @@ import {
   createCompany,
 } from "@/repositories/companies";
 import { createMembership, getMembership } from "@/repositories/memberships";
+import { ensureSubscription } from "@/repositories/subscriptions";
 import { createUser, getUserByClerkUserId } from "@/repositories/users";
 
 export type TenantContext = {
@@ -34,6 +35,7 @@ export async function getTenantContext(): Promise<TenantContext> {
       slug: "demo-betrieb",
       clerkOrgId: PLACEHOLDER_CLERK_ORG_ID,
     });
+    await ensureSubscription(company.id);
   }
 
   let user = await getUserByClerkUserId(PLACEHOLDER_CLERK_USER_ID);

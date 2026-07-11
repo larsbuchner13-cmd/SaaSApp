@@ -9,6 +9,8 @@ export const auditActionLabels: Record<string, string> = {
   "ai.offer_items_generated": "KI-Vorschlag für Positionen genutzt",
   "pricing_rule.created": "Preisregel angelegt",
   "pricing_rule.deleted": "Preisregel gelöscht",
+  "billing.checkout_started": "Tarif-Checkout gestartet",
+  "billing.subscription_updated": "Abonnement aktualisiert",
 };
 
 export function labelForAction(action: string): string {

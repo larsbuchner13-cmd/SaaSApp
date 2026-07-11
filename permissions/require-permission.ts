@@ -24,6 +24,23 @@ export async function requirePermission(params: {
   userId: string;
   permission: PermissionKey;
 }): Promise<void> {
+  if (!(await hasPermission(params))) {
+    throw new PermissionDeniedError(params.permission);
+  }
+}
+
+/**
+ * Boolesche Variante von requirePermission fuer bedingtes UI-Rendering
+ * (z. B. einen Button ausblenden statt ihn anzuzeigen und erst beim Klick
+ * scheitern zu lassen). Ersetzt requirePermission nicht — mutierende
+ * Server Actions pruefen weiterhin ueber requirePermission serverseitig,
+ * dies ist nur fuer Darstellungsentscheidungen gedacht.
+ */
+export async function hasPermission(params: {
+  companyId: string;
+  userId: string;
+  permission: PermissionKey;
+}): Promise<boolean> {
   const { companyId, userId, permission } = params;
 
   const rows = await db
@@ -41,7 +58,5 @@ export async function requirePermission(params: {
     )
     .limit(1);
 
-  if (rows.length === 0) {
-    throw new PermissionDeniedError(permission);
-  }
+  return rows.length > 0;
 }
