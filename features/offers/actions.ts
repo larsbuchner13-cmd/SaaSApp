@@ -8,6 +8,7 @@ import type { GeneratedOfferItem } from "@/ai/schemas/offer-items";
 import { recordAuditLog } from "@/audit/record";
 import { EMAIL_FROM, resend } from "@/emails/client";
 import { renderOfferEmail } from "@/emails/offer-email";
+import { logError } from "@/lib/log-error";
 import {
   PermissionDeniedError,
   requirePermission,
@@ -29,6 +30,10 @@ import {
   checkUsageLimit,
 } from "@/services/billing/check-usage-limit";
 import { calculateOfferTotals } from "@/services/pricing/calculate-offer-totals";
+import {
+  RateLimitExceededError,
+  checkRateLimit,
+} from "@/services/security/rate-limit";
 import { getTenantContext } from "@/server/tenant-context";
 
 import { offerFormSchema } from "./schemas";
@@ -130,7 +135,7 @@ export async function createOfferAction(
     if (error instanceof UsageLimitExceededError) {
       return { error: error.message };
     }
-    console.error("createOfferAction failed:", error);
+    logError("createOfferAction failed:", error);
     return { error: GENERIC_ERROR };
   }
 
@@ -214,7 +219,7 @@ export async function updateOfferAction(
     if (error instanceof PermissionDeniedError) {
       return { error: "Du hast keine Berechtigung, Angebote zu bearbeiten." };
     }
-    console.error("updateOfferAction failed:", error);
+    logError("updateOfferAction failed:", error);
     return { error: GENERIC_ERROR };
   }
 
@@ -237,7 +242,7 @@ export async function deleteOfferAction(offerId: string) {
       entityId: offerId,
     });
   } catch (error) {
-    console.error("deleteOfferAction failed:", error);
+    logError("deleteOfferAction failed:", error);
     return;
   }
 
@@ -263,6 +268,7 @@ export async function generateOfferItemsAction(
     const { companyId, userId } = await getTenantContext();
     await requirePermission({ companyId, userId, permission: "offers:create" });
     await checkUsageLimit(companyId, "ai_requests");
+    await checkRateLimit(companyId, "ai_generate_offer_items");
 
     const items = await generateOfferItems(trimmed);
 
@@ -285,7 +291,10 @@ export async function generateOfferItemsAction(
     if (error instanceof UsageLimitExceededError) {
       return { error: error.message };
     }
-    console.error("generateOfferItemsAction failed:", error);
+    if (error instanceof RateLimitExceededError) {
+      return { error: error.message };
+    }
+    logError("generateOfferItemsAction failed:", error);
     return { error: AI_GENERIC_ERROR };
   }
 }
@@ -302,6 +311,7 @@ export async function sendOfferEmailAction(
   try {
     const { companyId, userId } = await getTenantContext();
     await requirePermission({ companyId, userId, permission: "offers:send" });
+    await checkRateLimit(companyId, "send_offer_email");
 
     const [offer, company] = await Promise.all([
       getOfferById(companyId, offerId),
@@ -368,7 +378,7 @@ export async function sendOfferEmailAction(
     });
 
     if (sendError) {
-      console.error("resend.emails.send failed:", sendError);
+      logError("resend.emails.send failed:", sendError);
       return { error: SEND_GENERIC_ERROR };
     }
 
@@ -391,7 +401,10 @@ export async function sendOfferEmailAction(
     if (error instanceof PermissionDeniedError) {
       return { error: "Du hast keine Berechtigung, Angebote zu versenden." };
     }
-    console.error("sendOfferEmailAction failed:", error);
+    if (error instanceof RateLimitExceededError) {
+      return { error: error.message };
+    }
+    logError("sendOfferEmailAction failed:", error);
     return { error: SEND_GENERIC_ERROR };
   }
 }

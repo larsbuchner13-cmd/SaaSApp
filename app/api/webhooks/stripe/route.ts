@@ -3,12 +3,14 @@ import type Stripe from "stripe";
 
 import { stripe } from "@/billing/stripe-client";
 import { env } from "@/config/env";
+import { logError } from "@/lib/log-error";
 import { handleStripeWebhookEvent } from "@/webhooks/stripe-handler";
 
 export async function POST(request: Request) {
   if (!env.STRIPE_WEBHOOK_SECRET) {
-    console.error(
+    logError(
       "Stripe-Webhook empfangen, aber STRIPE_WEBHOOK_SECRET ist nicht gesetzt.",
+      new Error("STRIPE_WEBHOOK_SECRET fehlt"),
     );
     return new NextResponse("Webhook nicht konfiguriert.", { status: 500 });
   }
@@ -28,14 +30,14 @@ export async function POST(request: Request) {
       env.STRIPE_WEBHOOK_SECRET,
     );
   } catch (error) {
-    console.error("Stripe-Webhook-Signaturpruefung fehlgeschlagen:", error);
+    logError("Stripe-Webhook-Signaturpruefung fehlgeschlagen:", error);
     return new NextResponse("Ungültige Signatur.", { status: 400 });
   }
 
   try {
     await handleStripeWebhookEvent(event);
   } catch (error) {
-    console.error("handleStripeWebhookEvent fehlgeschlagen:", error);
+    logError("handleStripeWebhookEvent fehlgeschlagen:", error);
     return new NextResponse("Verarbeitung fehlgeschlagen.", { status: 500 });
   }
 
