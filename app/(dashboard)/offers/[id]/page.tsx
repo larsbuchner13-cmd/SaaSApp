@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DeleteOfferButton } from "@/features/offers/components/delete-offer-button";
 import { OfferStatusBadge } from "@/features/offers/components/offer-status-badge";
 import { getOfferById } from "@/repositories/offers";
 import { getTenantContext } from "@/server/tenant-context";
@@ -34,7 +35,10 @@ export default async function OfferDetailPage({
           </h1>
           <p className="text-muted-foreground text-sm">{offer.customer.name}</p>
         </div>
-        <OfferStatusBadge status={offer.status} />
+        <div className="flex items-center gap-2">
+          <OfferStatusBadge status={offer.status} />
+          <DeleteOfferButton offerId={offer.id} />
+        </div>
       </div>
 
       <Card>

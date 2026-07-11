@@ -11,6 +11,7 @@ import { listActivePricingRules } from "@/repositories/pricing-rules";
 import {
   createOfferWithItems,
   getNextOfferNumber,
+  softDeleteOffer,
 } from "@/repositories/offers";
 import { calculateOfferTotals } from "@/services/pricing/calculate-offer-totals";
 import { getTenantContext } from "@/server/tenant-context";
@@ -90,4 +91,12 @@ export async function createOfferAction(
 
   revalidatePath("/offers");
   redirect(`/offers/${offerId}`);
+}
+
+export async function deleteOfferAction(offerId: string) {
+  const { companyId, userId } = await getTenantContext();
+  await requirePermission({ companyId, userId, permission: "offers:delete" });
+  await softDeleteOffer(companyId, offerId);
+  revalidatePath("/offers");
+  redirect("/offers");
 }

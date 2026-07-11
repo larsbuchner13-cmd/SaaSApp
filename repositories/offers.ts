@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { and, count, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, isNull } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import { offerItems, offers } from "@/db/schema";
@@ -8,7 +8,7 @@ import type { OfferItemSource } from "@/db/schema";
 
 export async function listOffers(tenantId: string) {
   return db.query.offers.findMany({
-    where: eq(offers.companyId, tenantId),
+    where: and(eq(offers.companyId, tenantId), isNull(offers.deletedAt)),
     orderBy: desc(offers.createdAt),
     with: { customer: true },
   });
@@ -16,9 +16,20 @@ export async function listOffers(tenantId: string) {
 
 export async function getOfferById(tenantId: string, offerId: string) {
   return db.query.offers.findFirst({
-    where: and(eq(offers.companyId, tenantId), eq(offers.id, offerId)),
+    where: and(
+      eq(offers.companyId, tenantId),
+      eq(offers.id, offerId),
+      isNull(offers.deletedAt),
+    ),
     with: { customer: true, items: true },
   });
+}
+
+export async function softDeleteOffer(tenantId: string, offerId: string) {
+  await db
+    .update(offers)
+    .set({ deletedAt: new Date() })
+    .where(and(eq(offers.companyId, tenantId), eq(offers.id, offerId)));
 }
 
 /**
