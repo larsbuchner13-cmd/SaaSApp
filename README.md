@@ -31,6 +31,7 @@ npm run dev
 | `npm run db:migrate`   | Migrationen gegen `DATABASE_URL` anwenden   |
 | `npm run db:seed`      | Systemrollen + Berechtigungen seeden        |
 | `npm run db:studio`    | Drizzle Studio (DB-Browser)                 |
+| `npm run test:e2e`     | Playwright E2E-Tests (siehe `e2e/`)         |
 
 ## Datenbank
 
@@ -53,15 +54,30 @@ Variables) setzen, für Production und Preview:
 - `OPENAI_API_KEY` — für den KI-Assistenten (M5)
 - `BLOB_READ_WRITE_TOKEN` — für die PDF-Archivierung (M6)
 - `RESEND_API_KEY` — für den E-Mail-Versand (M6)
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_*` — für Billing (M7)
+- `NEXT_PUBLIC_SENTRY_DSN` — optional, für Error-Monitoring (M9)
 
 ## Status
 
-Meilenstein 6 (Angebots-PDF) abgeschlossen — siehe ARCHITECTURE.md, Abschnitt
-"Priorisierte Roadmap". PDF-Download, Archivierung in Vercel Blob (jeder
-Download legt eine Kopie als `attachments`-Eintrag ab, nicht blockierend über
-Next.js' `after()`) und Versand per E-Mail inkl. PDF-Anhang über Resend — das
-Versenden setzt den Angebotsstatus automatisch auf "sent". M7 (Billing)
-übersprungen, bis Stripe-Keys vorliegen.
+Meilenstein 9 (Security-Härtung, Rate-Limiting, Monitoring, E2E-Tests)
+abgeschlossen — siehe ARCHITECTURE.md, Abschnitt "Priorisierte Roadmap".
+Damit sind M0–M9 fertig; offen bleiben nur M10+ (zukünftige Module) und die
+Clerk-Integration (s. u.).
+
+- **Security-Header**: CSP, `X-Frame-Options`, HSTS etc. für alle Routen
+  (`next.config.ts`).
+- **Rate-Limiting**: Fixed-Window-Zähler pro Tenant + Aktion
+  (`services/security/rate-limit.ts`, Tabelle `rate_limit_counters`) schützt
+  KI-Generierung und E-Mail-Versand vor Bursts — unabhängig von den
+  monatlichen Plan-Limits (`services/billing/check-usage-limit.ts`).
+- **Monitoring**: Sentry (`@sentry/nextjs`) für Server, Edge und Client,
+  aktiv sobald `NEXT_PUBLIC_SENTRY_DSN` gesetzt ist, sonst inaktiv (kein
+  Boot-Fehler). Alle Fehlerpfade laufen über `lib/log-error.ts` statt
+  rohem `console.error`.
+- **E2E-Tests**: Playwright (`e2e/critical-flows.spec.ts`) deckt den
+  Kern-Workflow ab (Kunde anlegen → Angebot mit Preisengine → PDF-Download),
+  siehe `playwright.config.ts`. Braucht eine echte `DATABASE_URL` (Neon) und
+  einen laufenden Dev-Server; `npm run test:e2e`.
 
 Die KI (`ai/generate-offer-items.ts`) beschreibt ausschließlich Leistungen
 über OpenAI Function Calling — sie berechnet nie Preise oder Mengen; das

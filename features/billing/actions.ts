@@ -7,6 +7,7 @@ import { stripe } from "@/billing/stripe-client";
 import { env } from "@/config/env";
 import { getPlanPriceId, planLabels } from "@/config/plans";
 import type { Plan } from "@/config/plans";
+import { logError } from "@/lib/log-error";
 import {
   PermissionDeniedError,
   requirePermission,
@@ -98,7 +99,7 @@ export async function createCheckoutSessionAction(
     if (error instanceof PermissionDeniedError) {
       return { error: "Du hast keine Berechtigung, den Tarif zu ändern." };
     }
-    console.error("createCheckoutSessionAction failed:", error);
+    logError("createCheckoutSessionAction failed:", error);
     return { error: GENERIC_CHECKOUT_ERROR };
   }
 
@@ -135,7 +136,7 @@ export async function createPortalSessionAction(
         error: "Du hast keine Berechtigung, die Abrechnung zu verwalten.",
       };
     }
-    console.error("createPortalSessionAction failed:", error);
+    logError("createPortalSessionAction failed:", error);
     return {
       error:
         "Kundenportal konnte nicht geöffnet werden. Bitte versuche es erneut.",

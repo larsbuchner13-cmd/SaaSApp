@@ -3,6 +3,7 @@ import "server-only";
 import { put } from "@vercel/blob";
 
 import { env } from "@/config/env";
+import { logError } from "@/lib/log-error";
 import { createAttachment } from "@/repositories/attachments";
 
 /**
@@ -37,6 +38,6 @@ export async function archiveOfferPdf(params: {
       sizeBytes: params.pdfBytes.byteLength,
     });
   } catch (error) {
-    console.error("archiveOfferPdf failed:", error);
+    logError("archiveOfferPdf failed:", error);
   }
 }

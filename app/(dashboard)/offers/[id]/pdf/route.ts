@@ -1,6 +1,7 @@
 import { after, NextResponse } from "next/server";
 
 import { recordAuditLog } from "@/audit/record";
+import { logError } from "@/lib/log-error";
 import {
   PermissionDeniedError,
   requirePermission,
@@ -65,7 +66,7 @@ export async function GET(
       company: { name: company.name, address: company.address },
     });
   } catch (error) {
-    console.error("generateOfferPdf failed:", error);
+    logError("generateOfferPdf failed:", error);
     return new NextResponse("PDF konnte nicht erstellt werden.", {
       status: 500,
     });

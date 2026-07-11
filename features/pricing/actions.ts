@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { recordAuditLog } from "@/audit/record";
+import { logError } from "@/lib/log-error";
 import {
   PermissionDeniedError,
   requirePermission,
@@ -66,7 +67,7 @@ export async function createPricingRuleAction(
     if (error instanceof PermissionDeniedError) {
       return { error: "Du hast keine Berechtigung, Preisregeln zu verwalten." };
     }
-    console.error("createPricingRuleAction failed:", error);
+    logError("createPricingRuleAction failed:", error);
     return {
       error:
         "Preisregel konnte nicht gespeichert werden. Bitte versuche es erneut.",
@@ -94,7 +95,7 @@ export async function deletePricingRuleAction(ruleId: string) {
       entityId: ruleId,
     });
   } catch (error) {
-    console.error("deletePricingRuleAction failed:", error);
+    logError("deletePricingRuleAction failed:", error);
     return;
   }
 

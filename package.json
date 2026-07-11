@@ -15,12 +15,14 @@
     "db:seed": "tsx --env-file-if-exists=.env.local db/seed.ts",
     "db:studio": "drizzle-kit studio",
     "stripe:setup-plans": "tsx --env-file-if-exists=.env.local billing/setup-plans.ts",
+    "test:e2e": "playwright test",
     "vercel-build": "npm run db:migrate && npm run db:seed && next build"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
     "@radix-ui/react-label": "^2.1.11",
     "@radix-ui/react-slot": "^1.3.0",
+    "@sentry/nextjs": "^10.65.0",
     "@vercel/blob": "^2.6.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -40,6 +42,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

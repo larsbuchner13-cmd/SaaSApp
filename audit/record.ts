@@ -1,5 +1,6 @@
 import "server-only";
 
+import { logError } from "@/lib/log-error";
 import { createAuditLog } from "@/repositories/audit-logs";
 
 /**
@@ -18,6 +19,6 @@ export async function recordAuditLog(params: {
   try {
     await createAuditLog(params);
   } catch (error) {
-    console.error("recordAuditLog failed:", error);
+    logError("recordAuditLog failed:", error);
   }
 }

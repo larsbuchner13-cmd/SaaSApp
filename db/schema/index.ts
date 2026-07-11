@@ -9,4 +9,5 @@ export * from "./audit";
 export * from "./billing";
 export * from "./settings";
 export * from "./notifications";
+export * from "./security";
 export * from "./relations";

@@ -262,20 +262,29 @@ Up-/Downgrade). Webhook-Handler sind idempotent (Event-ID-Dedupe) mit Retry-Tole
 | Meilenstein | Inhalt                                                                                                                                                             | Ergebnis                                                 |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
 | **M0** ✅   | Architekturübersicht, Domänenanalyse, Datenmodell, Roadmap                                                                                                         | dieses Dokument                                          |
-| **M1**      | Projekt-Scaffold: Next.js 15 + TS + Tailwind + shadcn/ui, Ordnerstruktur, Env-Validation, Lint/Format, CI-Grundgerüst                                              | lauffähiges leeres Projekt, deploybar auf Vercel         |
-| **M2**      | Datenbank & Auth-Fundament: Neon + Drizzle Schema (alle Tabellen aus Abschn. 4), Migrations, Clerk-Integration inkl. Org-Mapping, Tenant-Context, RBAC-Grundgerüst | Login, Company-Onboarding, leeres Dashboard              |
-| **M3**      | Kundenverwaltung (CRM-Basis)                                                                                                                                       | Kunde anlegen/suchen/bearbeiten, mobile-first            |
-| **M4**      | Preisengine + Materialien/Preislisten (ohne KI)                                                                                                                    | Angebot manuell erstellbar mit korrekter Preisberechnung |
-| **M5**      | KI-Assistent für Leistungsbeschreibung (Text + Sprachnotiz)                                                                                                        | Angebotsposition aus Diktat, versioniertes Prompt-System |
-| **M6**      | PDF-Erzeugung & Versand                                                                                                                                            | professionelles Angebots-PDF, Download/E-Mail            |
-| **M7**      | Subscription & Billing (Stripe) inkl. Plan-Limits, Feature-Flags                                                                                                   | zahlende Kunden möglich                                  |
-| **M8**      | Audit-Log, Usage-Tracking, Dashboard-Kennzahlen                                                                                                                    | Owner sieht Aktivität & Verbrauch                        |
-| **M9**      | Security-Härtung, Rate-Limiting, Monitoring (Sentry), E2E-Tests kritischer Flows                                                                                   | Production-Ready-Review                                  |
+| **M1** ✅   | Projekt-Scaffold: Next.js 15 + TS + Tailwind + shadcn/ui, Ordnerstruktur, Env-Validation, Lint/Format, CI-Grundgerüst                                              | lauffähiges leeres Projekt, deploybar auf Vercel         |
+| **M2** ⚠️   | Datenbank & Auth-Fundament: Neon + Drizzle Schema (alle Tabellen aus Abschn. 4), Migrations, Clerk-Integration inkl. Org-Mapping, Tenant-Context, RBAC-Grundgerüst | Login, Company-Onboarding, leeres Dashboard              |
+| **M3** ✅   | Kundenverwaltung (CRM-Basis)                                                                                                                                       | Kunde anlegen/suchen/bearbeiten, mobile-first            |
+| **M4** ✅   | Preisengine + Materialien/Preislisten (ohne KI)                                                                                                                    | Angebot manuell erstellbar mit korrekter Preisberechnung |
+| **M5** ✅   | KI-Assistent für Leistungsbeschreibung (Text + Sprachnotiz)                                                                                                        | Angebotsposition aus Diktat, versioniertes Prompt-System |
+| **M6** ✅   | PDF-Erzeugung & Versand                                                                                                                                            | professionelles Angebots-PDF, Download/E-Mail            |
+| **M7** ✅   | Subscription & Billing (Stripe) inkl. Plan-Limits, Feature-Flags                                                                                                   | zahlende Kunden möglich                                  |
+| **M8** ✅   | Audit-Log, Usage-Tracking, Dashboard-Kennzahlen                                                                                                                    | Owner sieht Aktivität & Verbrauch                        |
+| **M9** ✅   | Security-Härtung, Rate-Limiting, Monitoring (Sentry), E2E-Tests kritischer Flows                                                                                   | Production-Ready-Review                                  |
 | **M10+**    | Zukünftige Module (Rechnungen, Baustellen, Kalender, KI-Telefonie, Integrationen)                                                                                  | je eigener Feature-Slice, entkoppelt über Adapter        |
 
 Jeder Meilenstein wird lauffähig, getestet und deploybar übergeben. Nach jedem Meilenstein
 erfolgt eine Freigabe, bevor der nächste startet.
 
+⚠️ **M2-Ausnahme:** Die Clerk-Integration selbst steht noch aus — sie braucht echte
+Clerk-API-Keys, die bisher nicht vorliegen. Bis dahin bootstrapt
+`server/tenant-context.ts` einen einzelnen Platzhalter-Tenant (siehe README.md,
+Abschnitt "Status"); alle übrigen M2-Bestandteile (Schema, Migrations, RBAC-Grundgerüst,
+Tenant-Context-Abstraktion) sind fertig. Alle Features rufen ausschließlich
+`getTenantContext()` auf — der Umstieg auf echte Clerk-Sessions bleibt dadurch ein
+lokal begrenzter Austausch.
+
 ---
 
-**Nächster Schritt (M1) wartet auf Freigabe.**
+**M0–M9 abgeschlossen. Nächster Schritt: Clerk-API-Keys hinterlegen (schließt M2 ab),
+danach M10+ (weitere Module) nach Priorisierung.**
