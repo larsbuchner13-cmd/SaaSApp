@@ -1,4 +1,4 @@
-import { FileText, Mail, MapPin, Phone } from "lucide-react";
+import { FileText, Mail, MapPin, Pencil, Phone } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -41,7 +41,19 @@ export default async function CustomerDetailPage({
         <h1 className="text-2xl font-semibold tracking-tight">
           {customer.name}
         </h1>
-        <DeleteCustomerButton customerId={customer.id} />
+        <div className="flex items-center gap-2">
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            aria-label="Kunde bearbeiten"
+          >
+            <Link href={`/customers/${customer.id}/edit`}>
+              <Pencil />
+            </Link>
+          </Button>
+          <DeleteCustomerButton customerId={customer.id} />
+        </div>
       </div>
 
       <Button asChild size="lg">
