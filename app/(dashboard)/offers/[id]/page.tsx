@@ -1,5 +1,8 @@
+import { Pencil } from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeleteOfferButton } from "@/features/offers/components/delete-offer-button";
 import { OfferStatusBadge } from "@/features/offers/components/offer-status-badge";
@@ -37,6 +40,18 @@ export default async function OfferDetailPage({
         </div>
         <div className="flex items-center gap-2">
           <OfferStatusBadge status={offer.status} />
+          {offer.status === "draft" && (
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              aria-label="Angebot bearbeiten"
+            >
+              <Link href={`/offers/${offer.id}/edit`}>
+                <Pencil />
+              </Link>
+            </Button>
+          )}
           <DeleteOfferButton offerId={offer.id} />
         </div>
       </div>

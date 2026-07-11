@@ -108,3 +108,63 @@ export async function createOfferWithItems(
 
   return offer;
 }
+
+/**
+ * Ersetzt Kerndaten + alle Positionen eines bestehenden Angebots atomar.
+ * Aufrufer muss vorher pruefen, dass das Angebot im Status "draft" ist —
+ * diese Funktion selbst erzwingt das nicht.
+ */
+export async function updateOfferWithItems(
+  tenantId: string,
+  offerId: string,
+  data: {
+    customerId: string;
+    validUntil?: string;
+    vatRate: string;
+    totalNet: string;
+    totalGross: string;
+    items: Array<{
+      description: string;
+      quantity: string;
+      unit: string;
+      unitPrice: string;
+      materialId?: string;
+      source?: OfferItemSource;
+      position: number;
+    }>;
+  },
+) {
+  const offerUpdate = db
+    .update(offers)
+    .set({
+      customerId: data.customerId,
+      validUntil: data.validUntil,
+      vatRate: data.vatRate,
+      totalNet: data.totalNet,
+      totalGross: data.totalGross,
+    })
+    .where(and(eq(offers.companyId, tenantId), eq(offers.id, offerId)));
+
+  const itemsDelete = db
+    .delete(offerItems)
+    .where(
+      and(eq(offerItems.companyId, tenantId), eq(offerItems.offerId, offerId)),
+    );
+
+  if (data.items.length === 0) {
+    await db.batch([offerUpdate, itemsDelete]);
+    return;
+  }
+
+  await db.batch([
+    offerUpdate,
+    itemsDelete,
+    db.insert(offerItems).values(
+      data.items.map((item) => ({
+        companyId: tenantId,
+        offerId,
+        ...item,
+      })),
+    ),
+  ]);
+}

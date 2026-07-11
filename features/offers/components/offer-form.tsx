@@ -9,7 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { calculateOfferTotals } from "@/services/pricing/calculate-offer-totals";
 
-import { createOfferAction, type OfferActionState } from "../actions";
+import {
+  createOfferAction,
+  updateOfferAction,
+  type OfferActionState,
+} from "../actions";
 import type { OfferItemInput } from "../schemas";
 
 const DEFAULT_VAT_RATE = 19;
@@ -28,22 +32,45 @@ const currencyFormatter = new Intl.NumberFormat("de-DE", {
   currency: "EUR",
 });
 
+export type EditableOffer = {
+  id: string;
+  customerId: string;
+  validUntil: string | null;
+  items: Array<{
+    description: string;
+    quantity: string;
+    unit: string;
+    unitPrice: string;
+  }>;
+};
+
 export function OfferForm({
   customers,
   defaultCustomerId,
+  editOffer,
 }: {
   customers: Array<{ id: string; name: string }>;
   defaultCustomerId?: string;
+  editOffer?: EditableOffer;
 }) {
-  const [state, formAction, isPending] = useActionState(
-    createOfferAction,
-    initialState,
-  );
+  const action = editOffer
+    ? updateOfferAction.bind(null, editOffer.id)
+    : createOfferAction;
+  const [state, formAction, isPending] = useActionState(action, initialState);
   const [customerId, setCustomerId] = useState(
-    defaultCustomerId ?? customers[0]?.id ?? "",
+    editOffer?.customerId ?? defaultCustomerId ?? customers[0]?.id ?? "",
   );
-  const [validUntil, setValidUntil] = useState("");
-  const [items, setItems] = useState<OfferItemInput[]>([{ ...emptyItem }]);
+  const [validUntil, setValidUntil] = useState(editOffer?.validUntil ?? "");
+  const [items, setItems] = useState<OfferItemInput[]>(
+    editOffer
+      ? editOffer.items.map((item) => ({
+          description: item.description,
+          quantity: Number(item.quantity),
+          unit: item.unit,
+          unitPrice: Number(item.unitPrice),
+        }))
+      : [{ ...emptyItem }],
+  );
 
   const totals = useMemo(
     () =>
@@ -213,7 +240,11 @@ export function OfferForm({
       )}
 
       <Button type="submit" size="lg" disabled={isPending || !customerId}>
-        {isPending ? "Speichern …" : "Angebot speichern"}
+        {isPending
+          ? "Speichern …"
+          : editOffer
+            ? "Änderungen speichern"
+            : "Angebot speichern"}
       </Button>
     </form>
   );

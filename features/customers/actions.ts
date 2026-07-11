@@ -40,26 +40,18 @@ export async function createCustomerAction(
     };
   }
 
-  const { companyId, userId } = await getTenantContext();
+  const data = parsed.data;
+  const hasAddress = Boolean(data.street || data.zip || data.city);
+  let customerId: string;
 
   try {
+    const { companyId, userId } = await getTenantContext();
     await requirePermission({
       companyId,
       userId,
       permission: "customers:create",
     });
-  } catch (error) {
-    if (error instanceof PermissionDeniedError) {
-      return { error: "Du hast keine Berechtigung, Kunden anzulegen." };
-    }
-    throw error;
-  }
 
-  const data = parsed.data;
-  const hasAddress = Boolean(data.street || data.zip || data.city);
-
-  let customerId: string;
-  try {
     const customer = await createCustomer(companyId, {
       name: data.name,
       contactPerson: data.contactPerson,
@@ -71,7 +63,11 @@ export async function createCustomerAction(
       notes: data.notes,
     });
     customerId = customer.id;
-  } catch {
+  } catch (error) {
+    if (error instanceof PermissionDeniedError) {
+      return { error: "Du hast keine Berechtigung, Kunden anzulegen." };
+    }
+    console.error("createCustomerAction failed:", error);
     return {
       error: "Kunde konnte nicht gespeichert werden. Bitte versuche es erneut.",
     };
@@ -82,13 +78,19 @@ export async function createCustomerAction(
 }
 
 export async function deleteCustomerAction(customerId: string) {
-  const { companyId, userId } = await getTenantContext();
-  await requirePermission({
-    companyId,
-    userId,
-    permission: "customers:delete",
-  });
-  await softDeleteCustomer(companyId, customerId);
+  try {
+    const { companyId, userId } = await getTenantContext();
+    await requirePermission({
+      companyId,
+      userId,
+      permission: "customers:delete",
+    });
+    await softDeleteCustomer(companyId, customerId);
+  } catch (error) {
+    console.error("deleteCustomerAction failed:", error);
+    return;
+  }
+
   revalidatePath("/customers");
   redirect("/customers");
 }

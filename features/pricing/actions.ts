@@ -38,29 +38,25 @@ export async function createPricingRuleAction(
     };
   }
 
-  const { companyId, userId } = await getTenantContext();
-
   try {
+    const { companyId, userId } = await getTenantContext();
     await requirePermission({
       companyId,
       userId,
       permission: "pricing:manage",
     });
-  } catch (error) {
-    if (error instanceof PermissionDeniedError) {
-      return { error: "Du hast keine Berechtigung, Preisregeln zu verwalten." };
-    }
-    throw error;
-  }
 
-  try {
     await createPricingRule(companyId, {
       type: parsed.data.type,
       label: parsed.data.label,
       value: parsed.data.value.toFixed(4),
       valueType: parsed.data.valueType,
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof PermissionDeniedError) {
+      return { error: "Du hast keine Berechtigung, Preisregeln zu verwalten." };
+    }
+    console.error("createPricingRuleAction failed:", error);
     return {
       error:
         "Preisregel konnte nicht gespeichert werden. Bitte versuche es erneut.",
@@ -71,8 +67,18 @@ export async function createPricingRuleAction(
 }
 
 export async function deletePricingRuleAction(ruleId: string) {
-  const { companyId, userId } = await getTenantContext();
-  await requirePermission({ companyId, userId, permission: "pricing:manage" });
-  await softDeletePricingRule(companyId, ruleId);
+  try {
+    const { companyId, userId } = await getTenantContext();
+    await requirePermission({
+      companyId,
+      userId,
+      permission: "pricing:manage",
+    });
+    await softDeletePricingRule(companyId, ruleId);
+  } catch (error) {
+    console.error("deletePricingRuleAction failed:", error);
+    return;
+  }
+
   revalidatePath("/settings/pricing");
 }
