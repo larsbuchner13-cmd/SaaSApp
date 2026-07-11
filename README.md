@@ -53,7 +53,7 @@ Variables) setzen, für Production und Preview:
 
 ## Status
 
-Meilenstein 3 (Kundenverwaltung) — siehe ARCHITECTURE.md, Abschnitt "Priorisierte Roadmap".
+Meilenstein 4 (Angebote + Preisengine) — siehe ARCHITECTURE.md, Abschnitt "Priorisierte Roadmap".
 
 `server/tenant-context.ts` nutzt aktuell einen Platzhalter-Tenant (ein
 Demo-Betrieb) statt eines echten Logins — Clerk-Integration folgt, sobald

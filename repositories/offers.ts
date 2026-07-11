@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { and, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import { offerItems, offers } from "@/db/schema";
@@ -22,6 +22,25 @@ export async function getOfferById(tenantId: string, offerId: string) {
 }
 
 /**
+ * Fortlaufende Angebotsnummer pro Firma und Jahr (AN-2026-0001, ...).
+ * Basiert auf der Gesamtanzahl bisheriger Angebote — bei sehr hoher
+ * Nebenläufigkeit theoretisch kollisionsanfällig; für die Zielgruppe
+ * (1-20 Mitarbeiter, kein paralleles Massenanlegen) ausreichend robust.
+ * Ein DB-Sequence-Zähler kann das bei Bedarf später ersetzen, ohne dass
+ * Aufrufer sich ändern müssen.
+ */
+export async function getNextOfferNumber(tenantId: string): Promise<string> {
+  const [row] = await db
+    .select({ value: count() })
+    .from(offers)
+    .where(eq(offers.companyId, tenantId));
+
+  const year = new Date().getFullYear();
+  const sequence = (row?.value ?? 0) + 1;
+  return `AN-${year}-${String(sequence).padStart(4, "0")}`;
+}
+
+/**
  * Erzeugt Angebot + Positionen atomar in einem einzigen Request. Die
  * Angebots-ID wird clientseitig generiert (statt ueber RETURNING geloopt),
  * weil der neon-http-Treiber `db.batch()` nur unabhaengige Statements in
@@ -34,6 +53,9 @@ export async function createOfferWithItems(
     customerId: string;
     offerNumber: string;
     validUntil?: string;
+    vatRate: string;
+    totalNet: string;
+    totalGross: string;
     items: Array<{
       description: string;
       quantity: string;
@@ -52,6 +74,9 @@ export async function createOfferWithItems(
     customerId: data.customerId,
     offerNumber: data.offerNumber,
     validUntil: data.validUntil,
+    vatRate: data.vatRate,
+    totalNet: data.totalNet,
+    totalGross: data.totalGross,
   };
 
   if (data.items.length === 0) {

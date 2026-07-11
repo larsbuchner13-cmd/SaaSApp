@@ -1,6 +1,8 @@
-import { Mail, MapPin, Phone } from "lucide-react";
+import { FileText, Mail, MapPin, Phone } from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeleteCustomerButton } from "@/features/customers/components/delete-customer-button";
 import { getCustomerById } from "@/repositories/customers";
@@ -41,6 +43,12 @@ export default async function CustomerDetailPage({
         </h1>
         <DeleteCustomerButton customerId={customer.id} />
       </div>
+
+      <Button asChild size="lg">
+        <Link href={`/offers/new?customerId=${customer.id}`}>
+          <FileText /> Angebot erstellen
+        </Link>
+      </Button>
 
       <Card>
         <CardHeader>
