@@ -5,6 +5,7 @@ export const offerItemSchema = z.object({
   quantity: z.coerce.number().positive("Menge muss größer als 0 sein"),
   unit: z.string().min(1, "Einheit erforderlich").max(20),
   unitPrice: z.coerce.number().nonnegative("Preis darf nicht negativ sein"),
+  source: z.enum(["manual", "ai"]).default("manual"),
 });
 
 export const offerFormSchema = z.object({

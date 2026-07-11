@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { generateOfferItems } from "@/ai/generate-offer-items";
+import type { GeneratedOfferItem } from "@/ai/schemas/offer-items";
 import { recordAuditLog } from "@/audit/record";
 import {
   PermissionDeniedError,
@@ -96,7 +98,7 @@ export async function createOfferAction(
         quantity: item.quantity.toFixed(2),
         unit: item.unit,
         unitPrice: item.unitPrice.toFixed(2),
-        source: "manual",
+        source: item.source,
         position: index,
       })),
     });
@@ -183,7 +185,7 @@ export async function updateOfferAction(
         quantity: item.quantity.toFixed(2),
         unit: item.unit,
         unitPrice: item.unitPrice.toFixed(2),
-        source: "manual",
+        source: item.source,
         position: index,
       })),
     });
@@ -228,4 +230,45 @@ export async function deleteOfferAction(offerId: string) {
 
   revalidatePath("/offers");
   redirect("/offers");
+}
+
+export type GenerateOfferItemsResult =
+  { items: GeneratedOfferItem[] } | { error: string };
+
+const AI_GENERIC_ERROR =
+  "KI-Vorschlag konnte nicht erstellt werden. Bitte versuche es erneut oder gib die Positionen manuell ein.";
+
+export async function generateOfferItemsAction(
+  description: string,
+): Promise<GenerateOfferItemsResult> {
+  const trimmed = description.trim();
+  if (!trimmed) {
+    return { error: "Bitte beschreibe zuerst, was zu tun ist." };
+  }
+
+  try {
+    const { companyId, userId } = await getTenantContext();
+    await requirePermission({ companyId, userId, permission: "offers:create" });
+
+    const items = await generateOfferItems(trimmed);
+
+    await recordAuditLog({
+      companyId,
+      actorId: userId,
+      action: "ai.offer_items_generated",
+      entityType: "offer",
+      metadata: { itemCount: items.length },
+    });
+    await incrementUsageMetric(companyId, "ai_requests");
+
+    return { items };
+  } catch (error) {
+    if (error instanceof PermissionDeniedError) {
+      return {
+        error: "Du hast keine Berechtigung, den KI-Assistenten zu nutzen.",
+      };
+    }
+    console.error("generateOfferItemsAction failed:", error);
+    return { error: AI_GENERIC_ERROR };
+  }
 }

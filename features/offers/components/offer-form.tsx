@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Sparkles, Trash2 } from "lucide-react";
 import { useActionState, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
   type OfferActionState,
 } from "../actions";
 import type { OfferItemInput } from "../schemas";
+import { AiItemSuggestions } from "./ai-item-suggestions";
 
 const DEFAULT_VAT_RATE = 19;
 
@@ -23,6 +24,7 @@ const emptyItem: OfferItemInput = {
   quantity: 1,
   unit: "Stk",
   unitPrice: 0,
+  source: "manual",
 };
 
 const initialState: OfferActionState = undefined;
@@ -68,6 +70,7 @@ export function OfferForm({
           quantity: Number(item.quantity),
           unit: item.unit,
           unitPrice: Number(item.unitPrice),
+          source: "manual" as const,
         }))
       : [{ ...emptyItem }],
   );
@@ -96,6 +99,14 @@ export function OfferForm({
 
   function removeItem(index: number) {
     setItems((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function handleItemsGenerated(newItems: OfferItemInput[]) {
+    setItems((prev) => {
+      const isOnlyEmptyStarter =
+        prev.length === 1 && !prev[0].description && prev[0].unitPrice === 0;
+      return isOnlyEmptyStarter ? newItems : [...prev, ...newItems];
+    });
   }
 
   return (
@@ -139,11 +150,18 @@ export function OfferForm({
         />
       </div>
 
+      <AiItemSuggestions onItemsGenerated={handleItemsGenerated} />
+
       <div className="flex flex-col gap-3">
         <Label>Positionen *</Label>
         {items.map((item, index) => (
           <Card key={index}>
             <CardContent className="flex flex-col gap-3">
+              {item.source === "ai" && (
+                <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                  <Sparkles className="size-3" /> KI-Vorschlag
+                </span>
+              )}
               <Input
                 placeholder="Beschreibung (z. B. Wandsteckdose montieren)"
                 value={item.description}

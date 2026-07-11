@@ -50,13 +50,19 @@ Variables) setzen, für Production und Preview:
 
 - `DATABASE_URL` — die Neon-Connection-URL
 - `NEXT_PUBLIC_APP_URL` — die tatsächliche Deployment-URL
+- `OPENAI_API_KEY` — für den KI-Assistenten (M5)
 
 ## Status
 
-Meilenstein 8 (Audit-Log + Usage-Tracking) — siehe ARCHITECTURE.md, Abschnitt
-"Priorisierte Roadmap". M5 (KI-Assistent), M6 (PDF/E-Mail) und M7 (Billing)
-sind übersprungen, bis die jeweiligen API-Keys (OpenAI, Vercel Blob + Resend,
-Stripe) vorliegen — M8 brauchte keine externen Credentials.
+Meilenstein 5 (KI-Assistent) — siehe ARCHITECTURE.md, Abschnitt "Priorisierte
+Roadmap". M6 (PDF/E-Mail) und M7 (Billing) sind übersprungen, bis die
+jeweiligen API-Keys (Vercel Blob + Resend, Stripe) vorliegen.
+
+Die KI (`ai/generate-offer-items.ts`) beschreibt ausschließlich Leistungen
+über OpenAI Function Calling — sie berechnet nie Preise oder Mengen; das
+bleibt Aufgabe der Preisengine (`services/pricing/`). Prompts sind versioniert
+in `ai/prompts/` (als TS-Modul statt Dateisystem-Read, um Vercels
+Serverless-File-Tracing nicht zu riskieren).
 
 `server/tenant-context.ts` nutzt aktuell einen Platzhalter-Tenant (ein
 Demo-Betrieb) statt eines echten Logins — Clerk-Integration folgt, sobald
