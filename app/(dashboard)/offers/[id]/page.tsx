@@ -1,4 +1,4 @@
-import { Pencil } from "lucide-react";
+import { FileDown, Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -40,6 +40,16 @@ export default async function OfferDetailPage({
         </div>
         <div className="flex items-center gap-2">
           <OfferStatusBadge status={offer.status} />
+          <Button
+            asChild
+            variant="ghost"
+            size="icon"
+            aria-label="PDF herunterladen"
+          >
+            <a href={`/offers/${offer.id}/pdf`}>
+              <FileDown />
+            </a>
+          </Button>
           {offer.status === "draft" && (
             <Button
               asChild

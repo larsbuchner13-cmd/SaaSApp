@@ -54,9 +54,12 @@ Variables) setzen, für Production und Preview:
 
 ## Status
 
-Meilenstein 5 (KI-Assistent) — siehe ARCHITECTURE.md, Abschnitt "Priorisierte
-Roadmap". M6 (PDF/E-Mail) und M7 (Billing) sind übersprungen, bis die
-jeweiligen API-Keys (Vercel Blob + Resend, Stripe) vorliegen.
+Meilenstein 6 (Angebots-PDF) — siehe ARCHITECTURE.md, Abschnitt "Priorisierte
+Roadmap". Nur der Download-Teil: jedes Angebot lässt sich als PDF herunterladen
+(`pdf/offer-pdf.ts`, reines `pdf-lib`, kein externer Dienst nötig). Archivierung
+(dauerhafte Ablage) und E-Mail-Versand fehlen noch — die brauchen
+`BLOB_READ_WRITE_TOKEN` bzw. `RESEND_API_KEY`. M7 (Billing) ebenfalls
+übersprungen, bis Stripe-Keys vorliegen.
 
 Die KI (`ai/generate-offer-items.ts`) beschreibt ausschließlich Leistungen
 über OpenAI Function Calling — sie berechnet nie Preise oder Mengen; das
