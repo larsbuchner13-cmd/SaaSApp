@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { recordAuditLog } from "@/audit/record";
 import {
   PermissionDeniedError,
   requirePermission,
@@ -46,11 +47,20 @@ export async function createPricingRuleAction(
       permission: "pricing:manage",
     });
 
-    await createPricingRule(companyId, {
+    const rule = await createPricingRule(companyId, {
       type: parsed.data.type,
       label: parsed.data.label,
       value: parsed.data.value.toFixed(4),
       valueType: parsed.data.valueType,
+    });
+
+    await recordAuditLog({
+      companyId,
+      actorId: userId,
+      action: "pricing_rule.created",
+      entityType: "pricing_rule",
+      entityId: rule.id,
+      metadata: { label: rule.label, type: rule.type },
     });
   } catch (error) {
     if (error instanceof PermissionDeniedError) {
@@ -75,6 +85,14 @@ export async function deletePricingRuleAction(ruleId: string) {
       permission: "pricing:manage",
     });
     await softDeletePricingRule(companyId, ruleId);
+
+    await recordAuditLog({
+      companyId,
+      actorId: userId,
+      action: "pricing_rule.deleted",
+      entityType: "pricing_rule",
+      entityId: ruleId,
+    });
   } catch (error) {
     console.error("deletePricingRuleAction failed:", error);
     return;

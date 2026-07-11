@@ -53,8 +53,10 @@ Variables) setzen, für Production und Preview:
 
 ## Status
 
-Meilenstein 4 (Angebote + Preisengine, inkl. Preisregeln-Verwaltung unter
-Einstellungen) — siehe ARCHITECTURE.md, Abschnitt "Priorisierte Roadmap".
+Meilenstein 8 (Audit-Log + Usage-Tracking) — siehe ARCHITECTURE.md, Abschnitt
+"Priorisierte Roadmap". M5 (KI-Assistent), M6 (PDF/E-Mail) und M7 (Billing)
+sind übersprungen, bis die jeweiligen API-Keys (OpenAI, Vercel Blob + Resend,
+Stripe) vorliegen — M8 brauchte keine externen Credentials.
 
 `server/tenant-context.ts` nutzt aktuell einen Platzhalter-Tenant (ein
 Demo-Betrieb) statt eines echten Logins — Clerk-Integration folgt, sobald

@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 
+import { auditLogs } from "./audit";
 import { customers } from "./customers";
 import { offerItems, offers } from "./offers";
 import { permissions, rolePermissions, roles } from "./rbac";
@@ -77,5 +78,12 @@ export const offerItemsRelations = relations(offerItems, ({ one }) => ({
   offer: one(offers, {
     fields: [offerItems.offerId],
     references: [offers.id],
+  }),
+}));
+
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  actor: one(users, {
+    fields: [auditLogs.actorId],
+    references: [users.id],
   }),
 }));

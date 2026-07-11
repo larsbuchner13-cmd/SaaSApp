@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { recordAuditLog } from "@/audit/record";
 import {
   PermissionDeniedError,
   requirePermission,
@@ -15,6 +16,7 @@ import {
   softDeleteOffer,
   updateOfferWithItems,
 } from "@/repositories/offers";
+import { incrementUsageMetric } from "@/repositories/usage-metrics";
 import { calculateOfferTotals } from "@/services/pricing/calculate-offer-totals";
 import { getTenantContext } from "@/server/tenant-context";
 
@@ -99,6 +101,16 @@ export async function createOfferAction(
       })),
     });
     offerId = offer.id;
+
+    await recordAuditLog({
+      companyId,
+      actorId: userId,
+      action: "offer.created",
+      entityType: "offer",
+      entityId: offer.id,
+      metadata: { offerNumber },
+    });
+    await incrementUsageMetric(companyId, "offers_created");
   } catch (error) {
     if (error instanceof PermissionDeniedError) {
       return { error: "Du hast keine Berechtigung, Angebote zu erstellen." };
@@ -175,6 +187,14 @@ export async function updateOfferAction(
         position: index,
       })),
     });
+
+    await recordAuditLog({
+      companyId,
+      actorId: userId,
+      action: "offer.updated",
+      entityType: "offer",
+      entityId: offerId,
+    });
   } catch (error) {
     if (error instanceof PermissionDeniedError) {
       return { error: "Du hast keine Berechtigung, Angebote zu bearbeiten." };
@@ -193,6 +213,14 @@ export async function deleteOfferAction(offerId: string) {
     const { companyId, userId } = await getTenantContext();
     await requirePermission({ companyId, userId, permission: "offers:delete" });
     await softDeleteOffer(companyId, offerId);
+
+    await recordAuditLog({
+      companyId,
+      actorId: userId,
+      action: "offer.deleted",
+      entityType: "offer",
+      entityId: offerId,
+    });
   } catch (error) {
     console.error("deleteOfferAction failed:", error);
     return;

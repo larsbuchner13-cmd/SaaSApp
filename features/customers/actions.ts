@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { recordAuditLog } from "@/audit/record";
 import {
   PermissionDeniedError,
   requirePermission,
@@ -63,6 +64,15 @@ export async function createCustomerAction(
       notes: data.notes,
     });
     customerId = customer.id;
+
+    await recordAuditLog({
+      companyId,
+      actorId: userId,
+      action: "customer.created",
+      entityType: "customer",
+      entityId: customer.id,
+      metadata: { name: customer.name },
+    });
   } catch (error) {
     if (error instanceof PermissionDeniedError) {
       return { error: "Du hast keine Berechtigung, Kunden anzulegen." };
@@ -86,6 +96,14 @@ export async function deleteCustomerAction(customerId: string) {
       permission: "customers:delete",
     });
     await softDeleteCustomer(companyId, customerId);
+
+    await recordAuditLog({
+      companyId,
+      actorId: userId,
+      action: "customer.deleted",
+      entityType: "customer",
+      entityId: customerId,
+    });
   } catch (error) {
     console.error("deleteCustomerAction failed:", error);
     return;
