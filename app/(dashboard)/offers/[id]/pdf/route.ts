@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 
 import { recordAuditLog } from "@/audit/record";
 import {
   PermissionDeniedError,
   requirePermission,
 } from "@/permissions/require-permission";
+import { archiveOfferPdf } from "@/pdf/archive-offer-pdf";
 import { generateOfferPdf } from "@/pdf/offer-pdf";
 import { getCompanyById } from "@/repositories/companies";
 import { getOfferById } from "@/repositories/offers";
@@ -77,6 +78,15 @@ export async function GET(
     entityType: "offer",
     entityId: offer.id,
   });
+
+  after(() =>
+    archiveOfferPdf({
+      companyId,
+      offerId: offer.id,
+      offerNumber: offer.offerNumber,
+      pdfBytes,
+    }),
+  );
 
   return new NextResponse(Buffer.from(pdfBytes), {
     headers: {

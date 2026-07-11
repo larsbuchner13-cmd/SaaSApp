@@ -6,18 +6,23 @@ import { redirect } from "next/navigation";
 import { generateOfferItems } from "@/ai/generate-offer-items";
 import type { GeneratedOfferItem } from "@/ai/schemas/offer-items";
 import { recordAuditLog } from "@/audit/record";
+import { EMAIL_FROM, resend } from "@/emails/client";
+import { renderOfferEmail } from "@/emails/offer-email";
 import {
   PermissionDeniedError,
   requirePermission,
 } from "@/permissions/require-permission";
-import { listActivePricingRules } from "@/repositories/pricing-rules";
+import { generateOfferPdf } from "@/pdf/offer-pdf";
+import { getCompanyById } from "@/repositories/companies";
 import {
   createOfferWithItems,
   getNextOfferNumber,
   getOfferById,
+  markOfferAsSent,
   softDeleteOffer,
   updateOfferWithItems,
 } from "@/repositories/offers";
+import { listActivePricingRules } from "@/repositories/pricing-rules";
 import { incrementUsageMetric } from "@/repositories/usage-metrics";
 import { calculateOfferTotals } from "@/services/pricing/calculate-offer-totals";
 import { getTenantContext } from "@/server/tenant-context";
@@ -270,5 +275,111 @@ export async function generateOfferItemsAction(
     }
     console.error("generateOfferItemsAction failed:", error);
     return { error: AI_GENERIC_ERROR };
+  }
+}
+
+export type SendOfferEmailResult = { success: true } | { error: string };
+
+const SEND_GENERIC_ERROR =
+  "E-Mail konnte nicht versendet werden. Bitte versuche es erneut.";
+
+export async function sendOfferEmailAction(
+  offerId: string,
+  message: string,
+): Promise<SendOfferEmailResult> {
+  try {
+    const { companyId, userId } = await getTenantContext();
+    await requirePermission({ companyId, userId, permission: "offers:send" });
+
+    const [offer, company] = await Promise.all([
+      getOfferById(companyId, offerId),
+      getCompanyById(companyId),
+    ]);
+
+    if (!offer || !company) {
+      return { error: "Angebot wurde nicht gefunden." };
+    }
+    if (!offer.customer.email) {
+      return {
+        error: "Für diesen Kunden ist keine E-Mail-Adresse hinterlegt.",
+      };
+    }
+
+    const pdfBytes = await generateOfferPdf({
+      offer: {
+        offerNumber: offer.offerNumber,
+        validUntil: offer.validUntil,
+        notes: offer.notes,
+        vatRate: offer.vatRate,
+        totalNet: offer.totalNet,
+        totalGross: offer.totalGross,
+        createdAt: offer.createdAt,
+        customer: {
+          name: offer.customer.name,
+          contactPerson: offer.customer.contactPerson,
+          address: offer.customer.address,
+        },
+        items: offer.items
+          .slice()
+          .sort((a, b) => a.position - b.position)
+          .map((item) => ({
+            description: item.description,
+            quantity: item.quantity,
+            unit: item.unit,
+            unitPrice: item.unitPrice,
+          })),
+      },
+      company: { name: company.name, address: company.address },
+    });
+
+    const email = renderOfferEmail({
+      offerNumber: offer.offerNumber,
+      customerName: offer.customer.name,
+      companyName: company.name,
+      totalGross: Number(offer.totalGross),
+      validUntil: offer.validUntil,
+      message: message.trim() || undefined,
+    });
+
+    const { error: sendError } = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: offer.customer.email,
+      subject: email.subject,
+      html: email.html,
+      text: email.text,
+      attachments: [
+        {
+          filename: `${offer.offerNumber}.pdf`,
+          content: Buffer.from(pdfBytes),
+        },
+      ],
+    });
+
+    if (sendError) {
+      console.error("resend.emails.send failed:", sendError);
+      return { error: SEND_GENERIC_ERROR };
+    }
+
+    await markOfferAsSent(companyId, offerId);
+
+    await recordAuditLog({
+      companyId,
+      actorId: userId,
+      action: "offer.sent",
+      entityType: "offer",
+      entityId: offerId,
+      metadata: { to: offer.customer.email },
+    });
+
+    revalidatePath("/offers");
+    revalidatePath(`/offers/${offerId}`);
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof PermissionDeniedError) {
+      return { error: "Du hast keine Berechtigung, Angebote zu versenden." };
+    }
+    console.error("sendOfferEmailAction failed:", error);
+    return { error: SEND_GENERIC_ERROR };
   }
 }

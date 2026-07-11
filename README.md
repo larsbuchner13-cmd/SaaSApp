@@ -51,14 +51,16 @@ Variables) setzen, für Production und Preview:
 - `DATABASE_URL` — die Neon-Connection-URL
 - `NEXT_PUBLIC_APP_URL` — die tatsächliche Deployment-URL
 - `OPENAI_API_KEY` — für den KI-Assistenten (M5)
+- `BLOB_READ_WRITE_TOKEN` — für die PDF-Archivierung (M6)
+- `RESEND_API_KEY` — für den E-Mail-Versand (M6)
 
 ## Status
 
-Meilenstein 6 (Angebots-PDF) — siehe ARCHITECTURE.md, Abschnitt "Priorisierte
-Roadmap". Nur der Download-Teil: jedes Angebot lässt sich als PDF herunterladen
-(`pdf/offer-pdf.ts`, reines `pdf-lib`, kein externer Dienst nötig). Archivierung
-(dauerhafte Ablage) und E-Mail-Versand fehlen noch — die brauchen
-`BLOB_READ_WRITE_TOKEN` bzw. `RESEND_API_KEY`. M7 (Billing) ebenfalls
+Meilenstein 6 (Angebots-PDF) abgeschlossen — siehe ARCHITECTURE.md, Abschnitt
+"Priorisierte Roadmap". PDF-Download, Archivierung in Vercel Blob (jeder
+Download legt eine Kopie als `attachments`-Eintrag ab, nicht blockierend über
+Next.js' `after()`) und Versand per E-Mail inkl. PDF-Anhang über Resend — das
+Versenden setzt den Angebotsstatus automatisch auf "sent". M7 (Billing)
 übersprungen, bis Stripe-Keys vorliegen.
 
 Die KI (`ai/generate-offer-items.ts`) beschreibt ausschließlich Leistungen

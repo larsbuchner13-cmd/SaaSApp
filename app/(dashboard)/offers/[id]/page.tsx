@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeleteOfferButton } from "@/features/offers/components/delete-offer-button";
 import { OfferStatusBadge } from "@/features/offers/components/offer-status-badge";
+import { SendOfferEmail } from "@/features/offers/components/send-offer-email";
 import { getOfferById } from "@/repositories/offers";
 import { getTenantContext } from "@/server/tenant-context";
 
@@ -112,6 +113,13 @@ export default async function OfferDetailPage({
           </div>
         </CardContent>
       </Card>
+
+      {offer.status === "draft" && (
+        <SendOfferEmail
+          offerId={offer.id}
+          customerEmail={offer.customer.email}
+        />
+      )}
     </main>
   );
 }

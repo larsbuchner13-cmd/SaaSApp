@@ -5,7 +5,6 @@ import { z } from "zod";
  * Wird schrittweise um Felder ergaenzt, sobald die jeweilige Integration
  * implementiert wird (siehe ARCHITECTURE.md, Abschnitt "Priorisierte Roadmap"):
  *   - M2: DATABASE_URL (Neon), CLERK_SECRET_KEY, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
- *   - M6: BLOB_READ_WRITE_TOKEN, RESEND_API_KEY
  *   - M7: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
  *   - M9: SENTRY_DSN
  * Neue Vars gehoeren zwingend hierher, nie als roher `process.env`-Zugriff
@@ -23,6 +22,10 @@ const serverEnvSchema = z.object({
       "DATABASE_URL muss eine Postgres-Connection-URL sein",
     ),
   OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY darf nicht leer sein"),
+  BLOB_READ_WRITE_TOKEN: z
+    .string()
+    .min(1, "BLOB_READ_WRITE_TOKEN darf nicht leer sein"),
+  RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY darf nicht leer sein"),
 });
 
 const clientEnvSchema = z.object({

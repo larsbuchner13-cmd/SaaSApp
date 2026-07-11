@@ -33,6 +33,25 @@ export async function softDeleteOffer(tenantId: string, offerId: string) {
 }
 
 /**
+ * Markiert ein Angebot als versendet — nur ein gueltiger Uebergang aus
+ * "draft" heraus (siehe Status-Workflow in ARCHITECTURE.md). Kein Fehler
+ * bei bereits versendeten Angeboten, damit ein erneuter Versand (z. B.
+ * an eine zweite Adresse) den Status nicht zurueckwirft.
+ */
+export async function markOfferAsSent(tenantId: string, offerId: string) {
+  await db
+    .update(offers)
+    .set({ status: "sent" })
+    .where(
+      and(
+        eq(offers.companyId, tenantId),
+        eq(offers.id, offerId),
+        eq(offers.status, "draft"),
+      ),
+    );
+}
+
+/**
  * Fortlaufende Angebotsnummer pro Firma und Jahr (AN-2026-0001, ...).
  * Basiert auf der Gesamtanzahl bisheriger Angebote — bei sehr hoher
  * Nebenläufigkeit theoretisch kollisionsanfällig; für die Zielgruppe

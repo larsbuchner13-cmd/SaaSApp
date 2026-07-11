@@ -5,6 +5,7 @@ export const auditActionLabels: Record<string, string> = {
   "offer.updated": "Angebot bearbeitet",
   "offer.deleted": "Angebot gelöscht",
   "offer.pdf_generated": "Angebots-PDF heruntergeladen",
+  "offer.sent": "Angebot per E-Mail versendet",
   "ai.offer_items_generated": "KI-Vorschlag für Positionen genutzt",
   "pricing_rule.created": "Preisregel angelegt",
   "pricing_rule.deleted": "Preisregel gelöscht",
