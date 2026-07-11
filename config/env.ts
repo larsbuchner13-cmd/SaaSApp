@@ -5,7 +5,7 @@ import { z } from "zod";
  * Wird schrittweise um Felder ergaenzt, sobald die jeweilige Integration
  * implementiert wird (siehe ARCHITECTURE.md, Abschnitt "Priorisierte Roadmap"):
  *   - M2: DATABASE_URL (Neon), CLERK_SECRET_KEY, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
- *   - M9: SENTRY_DSN
+ *   - M9: NEXT_PUBLIC_SENTRY_DSN (optional, siehe unten)
  * Neue Vars gehoeren zwingend hierher, nie als roher `process.env`-Zugriff
  * an anderer Stelle im Code.
  */
@@ -44,6 +44,12 @@ const serverEnvSchema = z.object({
 
 const clientEnvSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+  /**
+   * Optional: Ohne DSN bleibt Sentry inaktiv (kein Boot-Fehler), da Monitoring
+   * kein Feature ist, das die App am Start hindern darf, wenn es fehlt. DSNs
+   * sind laut Sentry nicht geheim (`NEXT_PUBLIC_`, da im Client-Bundle noetig).
+   */
+  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
 });
 
 function parseEnv() {

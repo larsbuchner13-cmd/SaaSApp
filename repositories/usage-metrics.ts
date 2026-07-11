@@ -3,6 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { usageMetrics } from "@/db/schema";
 import type { UsageMetricKey } from "@/db/schema";
+import { logError } from "@/lib/log-error";
 
 function currentPeriod(): string {
   const now = new Date();
@@ -34,7 +35,7 @@ export async function incrementUsageMetric(
         set: { value: sql`${usageMetrics.value} + ${amount}` },
       });
   } catch (error) {
-    console.error("incrementUsageMetric failed:", error);
+    logError("incrementUsageMetric failed:", error);
   }
 }
 

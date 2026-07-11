@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { recordAuditLog } from "@/audit/record";
+import { logError } from "@/lib/log-error";
 import {
   PermissionDeniedError,
   requirePermission,
@@ -77,7 +78,7 @@ export async function createCustomerAction(
     if (error instanceof PermissionDeniedError) {
       return { error: "Du hast keine Berechtigung, Kunden anzulegen." };
     }
-    console.error("createCustomerAction failed:", error);
+    logError("createCustomerAction failed:", error);
     return {
       error: "Kunde konnte nicht gespeichert werden. Bitte versuche es erneut.",
     };
@@ -105,7 +106,7 @@ export async function deleteCustomerAction(customerId: string) {
       entityId: customerId,
     });
   } catch (error) {
-    console.error("deleteCustomerAction failed:", error);
+    logError("deleteCustomerAction failed:", error);
     return;
   }
 
