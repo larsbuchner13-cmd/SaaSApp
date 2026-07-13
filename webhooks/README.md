@@ -1,3 +1,3 @@
 # webhooks/
 
-Eingehende Webhooks (Stripe jetzt, spaeter WhatsApp Business, E-Mail-Import, ...).
+Eingehende Webhooks (Stripe, Clerk; spaeter WhatsApp Business, E-Mail-Import, ...).

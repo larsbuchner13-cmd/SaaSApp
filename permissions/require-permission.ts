@@ -16,7 +16,7 @@ export class PermissionDeniedError extends Error {
  * Zentraler serverseitiger RBAC-Guard. Wird von Server Actions/Route
  * Handlers aufgerufen, niemals nur im Frontend geprueft. `companyId` und
  * `userId` stammen aus dem serverseitig verifizierten Tenant-Context
- * (server/tenant-context.ts, folgt sobald Clerk verdrahtet ist) — niemals
+ * (server/tenant-context.ts, aus der Clerk-Session abgeleitet) — niemals
  * aus Client-Payloads.
  */
 export async function requirePermission(params: {

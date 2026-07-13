@@ -6,6 +6,10 @@ import { z } from "zod";
  * implementiert wird (siehe ARCHITECTURE.md, Abschnitt "Priorisierte Roadmap"):
  *   - M2: DATABASE_URL (Neon), CLERK_SECRET_KEY, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
  *   - M9: NEXT_PUBLIC_SENTRY_DSN (optional, siehe unten)
+ *
+ * CLERK_WEBHOOK_SECRET ist wie STRIPE_WEBHOOK_SECRET optional (siehe
+ * Kommentar dort) — braucht eine echte Deployment-URL fuer den
+ * Webhook-Endpunkt in Clerk.
  * Neue Vars gehoeren zwingend hierher, nie als roher `process.env`-Zugriff
  * an anderer Stelle im Code.
  */
@@ -20,6 +24,8 @@ const serverEnvSchema = z.object({
       "postgresql://",
       "DATABASE_URL muss eine Postgres-Connection-URL sein",
     ),
+  CLERK_SECRET_KEY: z.string().min(1, "CLERK_SECRET_KEY darf nicht leer sein"),
+  CLERK_WEBHOOK_SECRET: z.string().min(1).optional(),
   OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY darf nicht leer sein"),
   BLOB_READ_WRITE_TOKEN: z
     .string()
@@ -44,6 +50,9 @@ const serverEnvSchema = z.object({
 
 const clientEnvSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z
+    .string()
+    .min(1, "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY darf nicht leer sein"),
   /**
    * Optional: Ohne DSN bleibt Sentry inaktiv (kein Boot-Fehler), da Monitoring
    * kein Feature ist, das die App am Start hindern darf, wenn es fehlt. DSNs

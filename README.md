@@ -51,6 +51,8 @@ Variables) setzen, für Production und Preview:
 
 - `DATABASE_URL` — die Neon-Connection-URL
 - `NEXT_PUBLIC_APP_URL` — die tatsächliche Deployment-URL
+- `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` — für Login/Auth (M2)
+- `CLERK_WEBHOOK_SECRET` — optional, sobald der Webhook-Endpunkt in Clerk angelegt ist (M2)
 - `OPENAI_API_KEY` — für den KI-Assistenten (M5)
 - `BLOB_READ_WRITE_TOKEN` — für die PDF-Archivierung (M6)
 - `RESEND_API_KEY` — für den E-Mail-Versand (M6)
@@ -59,11 +61,25 @@ Variables) setzen, für Production und Preview:
 
 ## Status
 
-Meilenstein 9 (Security-Härtung, Rate-Limiting, Monitoring, E2E-Tests)
-abgeschlossen — siehe ARCHITECTURE.md, Abschnitt "Priorisierte Roadmap".
-Damit sind M0–M9 fertig; offen bleiben nur M10+ (zukünftige Module) und die
-Clerk-Integration (s. u.).
+M0–M9 abgeschlossen — siehe ARCHITECTURE.md, Abschnitt "Priorisierte Roadmap".
+Offen bleibt nur M10+ (zukünftige Module).
 
+- **Auth (M2)**: Clerk ist vollständig angebunden. Company = Clerk
+  Organization, User = Clerk User (1:1 gemappt). `middleware.ts` schützt alle
+  Dashboard-Routen und erzwingt eine aktive Organisation vor jedem
+  Dashboard-Zugriff (`/onboarding` sonst). `server/tenant-context.ts` leitet
+  den `TenantContext` aus der verifizierten Clerk-Session ab und synct
+  Company/User/Membership Just-in-time aus Clerks Backend-API beim
+  allerersten Zugriff (`auth/sync-clerk.ts`); der Clerk-Webhook
+  (`webhooks/clerk-handler.ts`, `/api/webhooks/clerk`) hält das danach aktuell.
+  Clerk-Organisationsrollen (nur `org:admin`/`org:member`) mappen nur beim
+  allerersten Anlegen einer Mitgliedschaft auf unsere Rollen (Ersteller →
+  `owner`, sonst `mitarbeiter`) — die feinere Rollenzuteilung bleibt Sache
+  unserer eigenen Einstellungen, nicht Clerks Org-Rollen. Für den
+  Webhook-Sync in Produktion: in Clerk (Dashboard → Webhooks) einen Endpoint
+  auf `<deployment-url>/api/webhooks/clerk` anlegen, Events `user.*`,
+  `organization.*`, `organizationMembership.*` abonnieren, und das Signing
+  Secret als `CLERK_WEBHOOK_SECRET` setzen.
 - **Security-Header**: CSP, `X-Frame-Options`, HSTS etc. für alle Routen
   (`next.config.ts`).
 - **Rate-Limiting**: Fixed-Window-Zähler pro Tenant + Aktion
@@ -76,16 +92,17 @@ Clerk-Integration (s. u.).
   rohem `console.error`.
 - **E2E-Tests**: Playwright (`e2e/critical-flows.spec.ts`) deckt den
   Kern-Workflow ab (Kunde anlegen → Angebot mit Preisengine → PDF-Download),
-  siehe `playwright.config.ts`. Braucht eine echte `DATABASE_URL` (Neon) und
-  einen laufenden Dev-Server; `npm run test:e2e`.
+  siehe `playwright.config.ts`. Braucht eine echte `DATABASE_URL` (Neon), einen
+  laufenden Dev-Server, `CLERK_SECRET_KEY` als **Test-Instance-Key**
+  (`sk_test_...`, kein `sk_live_...`) sowie `E2E_CLERK_USER_EMAIL` — die
+  E-Mail-Adresse eines dedizierten Clerk-Test-Users, der Mitglied **genau
+  einer** Organisation ist (Clerk aktiviert deren `orgId` dann automatisch;
+  unsere Middleware verlangt eine aktive Org für alle Dashboard-Routen). Die
+  Anmeldung im Test läuft über ein Backend-API-Sign-in-Token
+  (`@clerk/testing`), es wird kein Passwort benötigt. `npm run test:e2e`.
 
 Die KI (`ai/generate-offer-items.ts`) beschreibt ausschließlich Leistungen
 über OpenAI Function Calling — sie berechnet nie Preise oder Mengen; das
 bleibt Aufgabe der Preisengine (`services/pricing/`). Prompts sind versioniert
 in `ai/prompts/` (als TS-Modul statt Dateisystem-Read, um Vercels
 Serverless-File-Tracing nicht zu riskieren).
-
-`server/tenant-context.ts` nutzt aktuell einen Platzhalter-Tenant (ein
-Demo-Betrieb) statt eines echten Logins — Clerk-Integration folgt, sobald
-Clerk-API-Keys vorliegen. Das ist der einzige Ort, der dafür ausgetauscht
-wird; alle Features rufen nur `getTenantContext()` auf.

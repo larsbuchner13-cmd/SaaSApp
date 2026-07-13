@@ -23,3 +23,25 @@ export async function createCompany(data: {
   const [company] = await db.insert(companies).values(data).returning();
   return company;
 }
+
+/**
+ * Idempotenter Sync aus Clerk (Organization = Company, siehe
+ * ARCHITECTURE.md Abschnitt 5). Wird sowohl vom Clerk-Webhook als auch von
+ * `getTenantContext()` als Just-in-time-Fallback aufgerufen — beide duerfen
+ * gefahrlos gleichzeitig laufen (kein Duplikat/Crash bei Race Condition).
+ */
+export async function upsertCompanyFromClerkOrg(data: {
+  clerkOrgId: string;
+  name: string;
+  slug: string;
+}) {
+  const [company] = await db
+    .insert(companies)
+    .values(data)
+    .onConflictDoUpdate({
+      target: companies.clerkOrgId,
+      set: { name: data.name, slug: data.slug },
+    })
+    .returning();
+  return company;
+}

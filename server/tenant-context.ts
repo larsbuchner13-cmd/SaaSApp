@@ -1,55 +1,61 @@
 import "server-only";
 
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+
 import {
-  getCompanyByClerkOrgId,
-  createCompany,
-} from "@/repositories/companies";
-import { createMembership, getMembership } from "@/repositories/memberships";
+  mapClerkOrgRoleToRoleKey,
+  syncCompanyFromClerkOrg,
+  syncMembershipFromClerk,
+  syncUserFromClerk,
+} from "@/auth/sync-clerk";
+import { getCompanyByClerkOrgId } from "@/repositories/companies";
+import { getMembership } from "@/repositories/memberships";
 import { ensureSubscription } from "@/repositories/subscriptions";
-import { createUser, getUserByClerkUserId } from "@/repositories/users";
+import { getUserByClerkUserId } from "@/repositories/users";
 
 export type TenantContext = {
   companyId: string;
   userId: string;
 };
 
-const PLACEHOLDER_CLERK_ORG_ID = "placeholder-demo-org";
-const PLACEHOLDER_CLERK_USER_ID = "placeholder-demo-user";
-
 /**
- * TEMPORAERER Platzhalter, solange Clerk noch nicht angebunden ist (siehe
- * ARCHITECTURE.md Meilenstein 2). Bootstrapt einen einzelnen Demo-Tenant
- * mit Owner-Mitgliedschaft, damit Features gebaut und gezeigt werden
- * koennen, bevor Login existiert.
+ * Company = Clerk Organization, User = Clerk User (siehe ARCHITECTURE.md
+ * Abschnitt 5). `middleware.ts` stellt sicher, dass jede Dashboard-Route
+ * nur mit aktiver Session UND aktiver Organisation erreichbar ist — die
+ * Faelle unten sind daher nur ein Sicherheitsnetz, kein Normalfall.
  *
- * Das ist der EINZIGE Ort, der ausgetauscht wird, sobald Clerk-Keys
- * vorliegen: companyId/userId kommen dann aus der verifizierten
- * Clerk-Session statt aus den Platzhalter-Konstanten. Aufrufer kennen nur
- * diese Funktion und muessen dafuer nicht angepasst werden.
+ * Company/User/Membership werden Just-in-time aus Clerk synchronisiert
+ * (nur beim allerersten Zugriff, danach reine DB-Lookups) statt bei jedem
+ * Request Clerks Backend-API zu befragen — der `clerk`-Webhook
+ * (webhooks/clerk-handler.ts) haelt Aenderungen (Umbenennung, neue
+ * Mitglieder, Rollenwechsel) danach aktuell.
  */
 export async function getTenantContext(): Promise<TenantContext> {
-  let company = await getCompanyByClerkOrgId(PLACEHOLDER_CLERK_ORG_ID);
+  const { userId: clerkUserId, orgId: clerkOrgId, orgRole } = await auth();
+
+  if (!clerkUserId || !clerkOrgId) {
+    redirect("/sign-in");
+  }
+
+  let company = await getCompanyByClerkOrgId(clerkOrgId);
   if (!company) {
-    company = await createCompany({
-      name: "Demo-Betrieb",
-      slug: "demo-betrieb",
-      clerkOrgId: PLACEHOLDER_CLERK_ORG_ID,
-    });
+    company = await syncCompanyFromClerkOrg(clerkOrgId);
     await ensureSubscription(company.id);
   }
 
-  let user = await getUserByClerkUserId(PLACEHOLDER_CLERK_USER_ID);
+  let user = await getUserByClerkUserId(clerkUserId);
   if (!user) {
-    user = await createUser({
-      clerkUserId: PLACEHOLDER_CLERK_USER_ID,
-      email: "demo@example.com",
-      name: "Demo Owner",
-    });
+    user = await syncUserFromClerk(clerkUserId);
   }
 
   const membership = await getMembership(company.id, user.id);
   if (!membership) {
-    await createMembership(company.id, { userId: user.id, roleKey: "owner" });
+    await syncMembershipFromClerk(
+      company.id,
+      user.id,
+      mapClerkOrgRoleToRoleKey(orgRole),
+    );
   }
 
   return { companyId: company.id, userId: user.id };
