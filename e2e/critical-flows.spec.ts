@@ -1,19 +1,38 @@
+import { clerk, setupClerkTestingToken } from "@clerk/testing/playwright";
 import { expect, test } from "@playwright/test";
 
 /**
  * Deckt den Kern-Workflow aus ARCHITECTURE.md ab: Kunde anlegen -> Angebot
- * mit Preisengine erstellen -> PDF-Download. Laeuft gegen den
- * Platzhalter-Demo-Tenant (server/tenant-context.ts), der von jedem
- * Request geteilt wird — daher `serial`, eindeutige Testdaten (Zeitstempel
- * im Namen) und Aggregat-Summen werden nur auf Plausibilitaet geprueft
- * (nicht auf exakte Werte), da der Demo-Tenant ueber die Zeit eigene
- * Preisregeln ansammeln kann, die die Gesamtsumme beeinflussen.
+ * mit Preisengine erstellen -> PDF-Download. Braucht einen echten
+ * Clerk-Test-User (per Sign-in-Token angemeldet, kein Passwort noetig —
+ * siehe README.md, Abschnitt E2E-Tests), der Mitglied genau EINER
+ * Organisation ist, damit Clerk deren `orgId` automatisch aktiv setzt
+ * (unsere Middleware verlangt eine aktive Org fuer alle Dashboard-Routen).
+ *
+ * `serial`, da alle drei Tests denselben Tenant teilen — eindeutige
+ * Testdaten (Zeitstempel im Namen) und Aggregat-Summen werden nur auf
+ * Plausibilitaet geprueft (nicht auf exakte Werte), da der Tenant ueber die
+ * Zeit eigene Preisregeln ansammeln kann, die die Gesamtsumme beeinflussen.
  */
+const E2E_EMAIL = process.env.E2E_CLERK_USER_EMAIL;
+
 test.describe.serial("Kernworkflow: Kunde -> Angebot -> PDF", () => {
   const runId = Date.now();
   const customerName = `E2E Kunde ${runId}`;
   let customerId = "";
   let offerId = "";
+
+  test.beforeEach(async ({ page }) => {
+    test.skip(
+      !E2E_EMAIL,
+      "E2E_CLERK_USER_EMAIL ist nicht gesetzt — siehe README.md, Abschnitt E2E-Tests.",
+    );
+
+    await setupClerkTestingToken({ page });
+    await page.goto("/");
+    await clerk.loaded({ page });
+    await clerk.signIn({ page, emailAddress: E2E_EMAIL! });
+  });
 
   test("Kunde anlegen", async ({ page }) => {
     await page.goto("/customers/new");
@@ -70,10 +89,13 @@ test.describe.serial("Kernworkflow: Kunde -> Angebot -> PDF", () => {
     expect(gross).toBeGreaterThanOrEqual(200);
   });
 
-  test("PDF-Download liefert ein PDF", async ({ request }) => {
+  test("PDF-Download liefert ein PDF", async ({ page }) => {
     test.skip(!offerId, "Angebot wurde im vorherigen Test nicht angelegt.");
 
-    const response = await request.get(`/offers/${offerId}/pdf`);
+    // page.request statt des eigenstaendigen `request`-Fixtures, damit die
+    // Session-Cookies der angemeldeten Seite mitgeschickt werden (die
+    // Route ist jetzt durch middleware.ts geschuetzt).
+    const response = await page.request.get(`/offers/${offerId}/pdf`);
     expect(response.status()).toBe(200);
     expect(response.headers()["content-type"]).toBe("application/pdf");
 

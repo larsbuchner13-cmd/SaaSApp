@@ -263,7 +263,7 @@ Up-/Downgrade). Webhook-Handler sind idempotent (Event-ID-Dedupe) mit Retry-Tole
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
 | **M0** ✅   | Architekturübersicht, Domänenanalyse, Datenmodell, Roadmap                                                                                                         | dieses Dokument                                          |
 | **M1** ✅   | Projekt-Scaffold: Next.js 15 + TS + Tailwind + shadcn/ui, Ordnerstruktur, Env-Validation, Lint/Format, CI-Grundgerüst                                              | lauffähiges leeres Projekt, deploybar auf Vercel         |
-| **M2** ⚠️   | Datenbank & Auth-Fundament: Neon + Drizzle Schema (alle Tabellen aus Abschn. 4), Migrations, Clerk-Integration inkl. Org-Mapping, Tenant-Context, RBAC-Grundgerüst | Login, Company-Onboarding, leeres Dashboard              |
+| **M2** ✅   | Datenbank & Auth-Fundament: Neon + Drizzle Schema (alle Tabellen aus Abschn. 4), Migrations, Clerk-Integration inkl. Org-Mapping, Tenant-Context, RBAC-Grundgerüst | Login, Company-Onboarding, leeres Dashboard              |
 | **M3** ✅   | Kundenverwaltung (CRM-Basis)                                                                                                                                       | Kunde anlegen/suchen/bearbeiten, mobile-first            |
 | **M4** ✅   | Preisengine + Materialien/Preislisten (ohne KI)                                                                                                                    | Angebot manuell erstellbar mit korrekter Preisberechnung |
 | **M5** ✅   | KI-Assistent für Leistungsbeschreibung (Text + Sprachnotiz)                                                                                                        | Angebotsposition aus Diktat, versioniertes Prompt-System |
@@ -276,15 +276,17 @@ Up-/Downgrade). Webhook-Handler sind idempotent (Event-ID-Dedupe) mit Retry-Tole
 Jeder Meilenstein wird lauffähig, getestet und deploybar übergeben. Nach jedem Meilenstein
 erfolgt eine Freigabe, bevor der nächste startet.
 
-⚠️ **M2-Ausnahme:** Die Clerk-Integration selbst steht noch aus — sie braucht echte
-Clerk-API-Keys, die bisher nicht vorliegen. Bis dahin bootstrapt
-`server/tenant-context.ts` einen einzelnen Platzhalter-Tenant (siehe README.md,
-Abschnitt "Status"); alle übrigen M2-Bestandteile (Schema, Migrations, RBAC-Grundgerüst,
-Tenant-Context-Abstraktion) sind fertig. Alle Features rufen ausschließlich
-`getTenantContext()` auf — der Umstieg auf echte Clerk-Sessions bleibt dadurch ein
-lokal begrenzter Austausch.
+Clerk ist jetzt vollstaendig angebunden: `middleware.ts` schuetzt alle Dashboard-Routen
+und erzwingt eine aktive Organisation vor jedem Dashboard-Zugriff (`/onboarding` sonst),
+`server/tenant-context.ts` leitet `TenantContext` aus der verifizierten Clerk-Session ab
+(kein Platzhalter mehr) und synct Company/User/Membership Just-in-time aus Clerks
+Backend-API beim allerersten Zugriff (`auth/sync-clerk.ts`). Der Clerk-Webhook
+(`webhooks/clerk-handler.ts`) haelt das danach aktuell (Umbenennung, neue Mitglieder,
+entfernte Mitglieder). Clerk-Organisationsrollen (nur `org:admin`/`org:member`) mappen
+nur beim allerersten Anlegen einer Mitgliedschaft auf unsere Rollen (Ersteller → `owner`,
+sonst `mitarbeiter`) — die feinere Rollenzuteilung (Administrator, Büro,
+Steuerberater) bleibt Sache unserer eigenen Einstellungen, nicht Clerks Org-Rollen.
 
 ---
 
-**M0–M9 abgeschlossen. Nächster Schritt: Clerk-API-Keys hinterlegen (schließt M2 ab),
-danach M10+ (weitere Module) nach Priorisierung.**
+**M0–M9 abgeschlossen. Nächster Schritt: M10+ (weitere Module) nach Priorisierung.**

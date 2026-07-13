@@ -1,3 +1,4 @@
+import { Show } from "@clerk/nextjs";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -11,9 +12,21 @@ export default function LandingPage() {
         Die KI-gestützte Angebotserstellung für Handwerksbetriebe. Diktieren,
         prüfen, versenden.
       </p>
-      <Button size="lg" asChild>
-        <Link href="/dashboard">Zum Dashboard</Link>
-      </Button>
+      <Show when="signed-in">
+        <Button size="lg" asChild>
+          <Link href="/dashboard">Zum Dashboard</Link>
+        </Button>
+      </Show>
+      <Show when="signed-out">
+        <div className="flex gap-3">
+          <Button size="lg" variant="outline" asChild>
+            <Link href="/sign-in">Anmelden</Link>
+          </Button>
+          <Button size="lg" asChild>
+            <Link href="/sign-up">Kostenlos starten</Link>
+          </Button>
+        </div>
+      </Show>
     </main>
   );
 }

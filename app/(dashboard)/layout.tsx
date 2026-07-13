@@ -1,3 +1,4 @@
+import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { FileText, LayoutDashboard, Settings, Users } from "lucide-react";
 
@@ -27,6 +28,15 @@ export default function DashboardLayout({
           </Link>
         ))}
       </nav>
+      <header className="bg-background sticky top-0 z-10 flex items-center justify-between border-b px-4 py-2">
+        <OrganizationSwitcher
+          hidePersonal
+          afterSelectOrganizationUrl="/dashboard"
+          afterCreateOrganizationUrl="/dashboard"
+          afterLeaveOrganizationUrl="/onboarding"
+        />
+        <UserButton />
+      </header>
       {children}
     </div>
   );
