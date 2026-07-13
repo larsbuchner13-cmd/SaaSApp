@@ -2,24 +2,15 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 /**
- * `unsafe-inline` fuer Styles ist noetig, da Tailwind/shadcn zur Laufzeit
- * inline Styles setzen; Next.js-Hydration-Inline-Scripts benoetigen
- * ebenfalls `unsafe-inline`, da kein Nonce-Setup vorhanden ist.
+ * Content-Security-Policy wird bewusst NICHT hier gesetzt, sondern von
+ * `clerkMiddleware()` in middleware.ts generiert — Clerk kennt dort seine
+ * eigenen benoetigten Domains (Frontend-API, Cloudflare-Bot-Check) und
+ * merged unsere zusaetzlichen Direktiven hinein. Zwei getrennte
+ * CSP-Header (hier + Middleware) wuerden vom Browser als UND verknuepft
+ * durchgesetzt und Clerk blockieren, selbst wenn nur einer der beiden
+ * Header zu restriktiv ist.
  */
-const CONTENT_SECURITY_POLICY = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
-  "font-src 'self' data:",
-  "connect-src 'self' https://*.sentry.io",
-  "frame-ancestors 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-].join("; ");
-
 const securityHeaders = [
-  { key: "Content-Security-Policy", value: CONTENT_SECURITY_POLICY },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
